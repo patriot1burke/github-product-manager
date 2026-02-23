@@ -6,13 +6,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.quarkiverse.graphql.client.DefaultVariable;
 import io.quarkiverse.graphql.client.GraphQL;
+import io.quarkiverse.graphql.client.GraphQLClient;
+import io.quarkiverse.graphql.client.Namespace;
 import io.quarkiverse.graphql.client.Query;
+import io.quarkiverse.graphql.client.QueryTemplate;
+import io.quarkiverse.graphql.client.Variable;
 
 public class QueryBuildTest {
 
@@ -83,22 +91,22 @@ public class QueryBuildTest {
     }
 
     public interface GithubClient {
-        @Query("query { repository(owner: \"quarkusio\", name: \"quarkus\") { name } }")
+        @QueryTemplate("query { repository(owner: \"quarkusio\", name: \"quarkus\") { name } }")
         Repository queryNoParams();
 
-        @Query("query($owner: Foo!) { repository(owner: $owner, name: \"quarkus\") { name } }")
+        @QueryTemplate("query($owner: Foo!) { repository(owner: $owner, name: \"quarkus\") { name } }")
         Repository queryStringParams();
 
-        @Query("query { repository(owner: $owner, name: \"quarkus\") { name } }")
+        @QueryTemplate("query { repository(owner: $owner, name: \"quarkus\") { name } }")
         Repository queryParams(String owner);
 
-        @Query("query Repository { repository(owner: \"quarkusio\", name: \"quarkus\") { name } }")
+        @QueryTemplate("query Repository { repository(owner: \"quarkusio\", name: \"quarkus\") { name } }")
         Repository functionNoParams();
 
-        @Query("query Repository { repository(owner: $owner, name: \"quarkus\") { name } }")
+        @QueryTemplate("query Repository { repository(owner: $owner, name: \"quarkus\") { name } }")
         Repository functionParams(String owner);
 
-        @Query("query Repository($owner: Foo!) { repository(owner: $owner, name: \"quarkus\") { name } }")
+        @QueryTemplate("query Repository($owner: Foo!) { repository(owner: $owner, name: \"quarkus\") { name } }")
         Repository functionStringParams();
 
     }
@@ -122,5 +130,54 @@ public class QueryBuildTest {
         assertEquals(queryMap.get("functionStringParams"),
                 "query Repository($owner: Foo!) { repository(owner: $owner, name: \"quarkus\") { name } }");
         assertEquals(queryMap.size(), 6);
+    }
+
+    public record Author(String login) {
+    }
+
+    public record Discussion(String id, String title, Author author, String createdAt, String updatedAt) {
+    }
+
+    public record PageInfo(boolean hasNextPage, String endCursor) {
+    }
+
+    public record DiscussionConnection(int totalCount, PageInfo pageInfo, List<Discussion> nodes) {
+    }
+
+    public interface Github {
+        public interface Repository {
+            @Query
+            DiscussionConnection discussions(int first, @Namespace(".nodes") @Variable("first") int commentsFirst);
+        }
+
+        Repository repository(String owner, String name);
+
+        @Namespace("repository")
+        @Query
+        @DefaultVariable(name = "orderBy", value = "{field: CREATED_AT, direction: DESC}")
+        DiscussionConnection discussions(@Namespace("repository") String owner, @Namespace("repository") String name,
+                int first);
+    }
+
+    @Test
+    public void testPreMap() throws Exception {
+        Map<String, GraphQLClient.QueryBuilder.MethodMapping> methodMapping = GraphQLClient.QueryBuilder
+                .getMethodMapping(new ObjectMapper(), Github.class);
+        printMapping(methodMapping);
+    }
+
+    private void printMapping(Map<String, GraphQLClient.QueryBuilder.MethodMapping> methodMapping) {
+        for (Map.Entry<String, GraphQLClient.QueryBuilder.MethodMapping> entry : methodMapping.entrySet()) {
+            GraphQLClient.QueryBuilder.MethodMapping mapping = entry.getValue();
+            if (mapping.query() != null) {
+                System.out.println("-------" + entry.getKey() + "-------");
+                System.out.println(mapping.query());
+                System.out.println("------- END -------");
+            } else if (mapping.methodMap() != null) {
+                System.out.println(">>>>>>>>>>>>>>>>" + entry.getKey() + ">>>>>>>>>>>>>>>>");
+                printMapping(mapping.methodMap());
+                System.out.println("<<<<<<<<<<<<<<<<<" + entry.getKey() + "<<<<<<<<<<<<<<<<<<<");
+            }
+        }
     }
 }

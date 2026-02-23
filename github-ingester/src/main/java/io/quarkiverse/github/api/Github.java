@@ -1,22 +1,20 @@
-package io.quarkiverse.github.pm;
-
-import java.util.Map;
+package io.quarkiverse.github.api;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Link;
-import jakarta.ws.rs.core.Response;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.quarkiverse.github.api.GithubAPI.Repository;
+import io.quarkiverse.graphql.client.GraphQLClient;
 import io.quarkus.runtime.Startup;
 
 @ApplicationScoped
@@ -30,31 +28,27 @@ public class Github {
 
     Client client;
     WebTarget githubApi;
-    WebTarget graphqlApi;
 
     @Startup
     public void startup() {
         client = ClientBuilder.newClient();
-        githubApi = client.target("https://api.github.com");
-        graphqlApi = client.target("https://api.github.com/graphql");
     }
 
-    public WebTarget graphqlApi() {
-        return graphqlApi;
+    public Repository repository(String repo) {
+        String owner = repo.split("/")[0];
+        String name = repo.split("/")[1];
+        return api().repository(owner, name);
+    }
+
+    @Produces
+    @ApplicationScoped
+    public GithubAPI api() {
+        return new GraphQLClient(objectMapper).query().endpoint("https://api.github.com/graphql").bearer(githubToken)
+                .target(GithubAPI.class);
     }
 
     public WebTarget githubApi() {
         return githubApi;
-    }
-
-    public Response graphql(String query) {
-        try {
-            String json = objectMapper.writeValueAsString(Map.of("query", query));
-            return addGithubHeaders(graphqlApi.request()).post(Entity.json(json));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
     }
 
     public Invocation.Builder addGithubHeaders(Invocation.Builder builder) {

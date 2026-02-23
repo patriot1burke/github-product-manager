@@ -6,7 +6,7 @@ import static io.quarkiverse.github.pm.util.MessageIcons.WARN_ICON;
 import java.io.PrintWriter;
 import java.text.MessageFormat;
 
-import io.quarkiverse.github.pm.GithubIssueIngester;
+import io.quarkiverse.github.pm.Ingester;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.ColorScheme;
 import picocli.CommandLine.Model.CommandSpec;
@@ -55,7 +55,7 @@ public class OutputMixin implements AppLogger {
     }
 
     private static OutputMixin getOutput(CommandSpec commandSpec) {
-        return ((GithubIssueIngester) commandSpec.root().userObject()).getOutput();
+        return ((Ingester) commandSpec.root().userObject()).getOutput();
     }
 
     @CommandLine.Option(names = { "--verbose" }, description = "Verbose mode.")
@@ -147,6 +147,19 @@ public class OutputMixin implements AppLogger {
         if (isVerbose()) {
             debug(String.format(msg, params));
         }
+
+    }
+
+    public void thinking(String msg) {
+        out().println(colorScheme().ansi().new Text("@|faint " + msg + "|@", colorScheme()));
+    }
+
+    public void thinkingv(String msg, Object... params) {
+        thinking(MessageFormat.format(msg, params));
+    }
+
+    public void thinkingf(String msg, Object... params) {
+        thinking(MessageFormat.format(msg, params));
 
     }
 

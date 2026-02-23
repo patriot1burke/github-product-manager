@@ -17,6 +17,12 @@ public interface AppLogger {
 
     boolean isDebugEnabled();
 
+    void thinking(String msg);
+
+    void thinkingv(String msg, Object... params);
+
+    void thinkingf(String msg, Object... params);
+
     void debug(String msg);
 
     void debugv(String msg, Object... params);

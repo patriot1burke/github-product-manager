@@ -10,10 +10,7 @@ import picocli.CommandLine.Parameters;
 @Command(name = "pull", description = "Pull issues from Github")
 public class PullCommand extends BaseCommand implements Runnable {
     @Inject
-    GithubRepoIssuesService issues;
-
-    @Inject
-    GithubRepoDiscussions discussions;
+    GithubIndex discussions;
 
     @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
@@ -24,7 +21,7 @@ public class PullCommand extends BaseCommand implements Runnable {
     public void run() {
         //issues.pullRepo(repo.trim());
         try {
-            discussions.pullDiscussions3(repo.trim());
+            //discussions.updateDiscussionCategories(repo.trim());
         } catch (Exception e) {
             e.printStackTrace();
             log.error("Error pulling discussions", e);

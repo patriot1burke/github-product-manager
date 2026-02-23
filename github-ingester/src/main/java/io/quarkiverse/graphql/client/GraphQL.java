@@ -44,12 +44,12 @@ public class GraphQL {
             .compile("^\\s*query\\s*([a-zA-Z0-9_]+)\\s*\\(([^)]*)\\)");
     public static Pattern QUERY_FUNCTION_WITHOUT_PARAMS = Pattern.compile("^\\s*query\\s*([a-zA-Z0-9_]+)\\s*\\{");
 
-    class Invoker implements InvocationHandler {
+    class TemplateInvoker implements InvocationHandler {
         private Map<String, String> headers;
         private Map<String, QueryMapping> queryMap;
         private WebTarget target;
 
-        public Invoker(Map<String, String> headers, Map<String, QueryMapping> queryMap, WebTarget target) {
+        public TemplateInvoker(Map<String, String> headers, Map<String, QueryMapping> queryMap, WebTarget target) {
             this.headers = headers;
             this.queryMap = queryMap;
             this.target = target;
@@ -117,7 +117,7 @@ public class GraphQL {
             if (value == null) {
                 return this;
             }
-            variables.put(name, Variable.variable(value));
+            variables.put(name, Variables.variable(value));
             return this;
         }
 
@@ -153,7 +153,7 @@ public class GraphQL {
         }
 
         public static String queryMapping(Method method) {
-            Query annotation = method.getAnnotation(Query.class);
+            QueryTemplate annotation = method.getAnnotation(QueryTemplate.class);
             if (annotation == null) {
                 throw new RuntimeException("No query specified for method: " + method.getName());
             }
@@ -178,7 +178,7 @@ public class GraphQL {
                     variableDeclaration.append(", ");
                 }
                 variableDeclaration.append("$").append(parameter.getName()).append(": ")
-                        .append(Variable.inputType(parameter));
+                        .append(Variables.inputType(parameter));
             }
             if (hasParams) {
                 String params = "(" + variableDeclaration.toString() + ")";
@@ -225,7 +225,7 @@ public class GraphQL {
             }
             WebTarget target = client.target(endpoint);
             return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type },
-                    new Invoker(headers, queryMap, target));
+                    new TemplateInvoker(headers, queryMap, target));
         }
 
     }

@@ -35,6 +35,21 @@ public class JbossLogger implements AppLogger {
     }
 
     @Override
+    public void thinking(String msg) {
+        log.debug(msg);
+    }
+
+    @Override
+    public void thinkingv(String msg, Object... params) {
+        log.debugv(msg, params);
+    }
+
+    @Override
+    public void thinkingf(String msg, Object... params) {
+        log.debugf(msg, params);
+    }
+
+    @Override
     public void info(String msg) {
         log.info(msg);
     }
