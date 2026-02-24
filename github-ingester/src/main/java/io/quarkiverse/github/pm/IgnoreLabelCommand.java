@@ -1,46 +1,47 @@
 package io.quarkiverse.github.pm;
 
-import java.util.List;
-
 import jakarta.inject.Inject;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
+import io.quarkiverse.github.api.Discussions.DiscussionCategory;
 import io.quarkiverse.github.api.Labels.Label;
+import io.quarkiverse.github.index.GithubIndex;
+import io.quarkiverse.github.index.RepositoryIndex;
 import io.quarkiverse.github.pm.util.AppLogger;
 import io.quarkiverse.github.pm.util.BaseCommand;
+import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "label", description = "Ignore a label")
-public class IgnoreLabelCommand extends BaseCommand implements Runnable {
+public class IgnoreLabelCommand extends BaseCommand implements Callable<Integer> {
     @Inject
     GithubIndex index;
 
     @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
 
-    @Parameters(index = "1", description = "ID of the category.  do 'ingester show categories' to get the ID if you don't know it.")
+    @Parameters(index = "1", description = "Name of the label.  do 'ingester show labels' to get list of labels.")
     private String label;
 
-    static AppLogger log = AppLogger.getLogger(IgnoreCategoryCommand.class);
-
     @Override
-    public void run() {
+    public Integer call() throws Exception {
         RepositoryIndex repoIndex = index.createIfNotExists(repo.trim());
-        if (!repoIndex.labels.containsKey(label)) {
-            index.updateDiscussionCategories(repoIndex);
-        }
-        if (!repoIndex.labels.containsKey(label)) {
-            log.error("Label [" + label + "] not found in " + repo);
-            log.info("Available labels: ");
-            List<Label> labels = index.labels(repo.trim());
-            for (Label label : labels) {
-                log.thinking("[" + label.id() + "]: " + label.name() + " - "
-                        + label.description());
+        Map<String, Label> labels = index.labels(repo.trim());
+        if (!labels.containsKey(label)) {
+            output.error("Label [" + label + "] not found in " + repo);
+            output.info("Available labels: ");
+            for (Label label : labels.values()) {
+                output.thinking("[" + label.name() + "]: " + label.description());
             }
-            return;
+            return CommandLine.ExitCode.SOFTWARE;
         }
         repoIndex.ignoredLabels.add(label);
         index.save(repoIndex);
+        return CommandLine.ExitCode.OK;
     }
 
 }

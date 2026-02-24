@@ -6,7 +6,7 @@ import io.quarkiverse.github.api.Labels.LabelConnectionIdOnly;
 
 public interface Discussions {
 
-    public record DiscussionCategoryIdOnly(String id) {
+    public record DiscussionCategoryNameOnly(String name) {
 
     }
 
@@ -20,19 +20,11 @@ public interface Discussions {
     public record DiscussionCommentConnection(PageInfo pageInfo, List<Comment> nodes) {
     }
 
-    public record Discussion(int number, String title, Actor author, DiscussionCategoryIdOnly category,
+    public record Discussion(int number, String title, Actor author, DiscussionCategoryNameOnly category,
             String body, String createdAt,
             String updatedAt, LabelConnectionIdOnly labels, DiscussionCommentConnection comments) {
     }
 
-    public record DiscussionIdOnly(String id, String updatedAt) {
-
-    }
-
     public record DiscussionConnection(PageInfo pageInfo, List<Discussion> nodes) {
     }
-
-    public record DiscussionConnectionIdOnly(PageInfo pageInfo, List<DiscussionIdOnly> nodes) {
-    }
-
 }

@@ -1,4 +1,4 @@
-package io.quarkiverse.github.pm;
+package io.quarkiverse.github.index;
 
 import java.io.IOException;
 import java.nio.file.Files;

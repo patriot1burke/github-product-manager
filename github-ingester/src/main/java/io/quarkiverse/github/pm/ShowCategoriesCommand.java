@@ -1,10 +1,13 @@
 package io.quarkiverse.github.pm;
 
-import java.util.List;
-
 import jakarta.inject.Inject;
 
+import java.util.List;
+import java.util.Map;
+
 import io.quarkiverse.github.api.Discussions.DiscussionCategory;
+import io.quarkiverse.github.index.GithubIndex;
+import io.quarkiverse.github.index.GithubRepoIssuesService;
 import io.quarkiverse.github.pm.util.AppLogger;
 import io.quarkiverse.github.pm.util.BaseCommand;
 import picocli.CommandLine.Command;
@@ -21,19 +24,15 @@ public class ShowCategoriesCommand extends BaseCommand implements Runnable {
     @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
 
-    static AppLogger log = AppLogger.getLogger(ShowCategoriesCommand.class);
-
     @Override
     public void run() {
         try {
-            List<DiscussionCategory> categories = index.discussionCategories(repo.trim());
-            for (DiscussionCategory discussionCategory : categories) {
-                log.info("[" + discussionCategory.id() + "]: " + discussionCategory.name() + " - "
-                        + discussionCategory.description());
+            Map<String, DiscussionCategory> categories = index.discussionCategories(repo.trim());
+            for (DiscussionCategory discussionCategory : categories.values()) {
+                output.info("[" + discussionCategory.name() + "]: " + discussionCategory.description());
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            log.error("Error pulling discussions", e);
+            output.error("Error pulling discussions", e);
         }
 
     }

@@ -1,46 +1,46 @@
 package io.quarkiverse.github.pm;
 
-import java.util.List;
-
 import jakarta.inject.Inject;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
 import io.quarkiverse.github.api.Discussions.DiscussionCategory;
+import io.quarkiverse.github.index.GithubIndex;
+import io.quarkiverse.github.index.RepositoryIndex;
 import io.quarkiverse.github.pm.util.AppLogger;
 import io.quarkiverse.github.pm.util.BaseCommand;
+import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "category", description = "Ignore a discussion category")
-public class IgnoreCategoryCommand extends BaseCommand implements Runnable {
+public class IgnoreCategoryCommand extends BaseCommand implements Callable<Integer> {
     @Inject
     GithubIndex index;
 
     @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
 
-    @Parameters(index = "1", description = "ID of the category.  do 'ingester show categories' to get the ID if you don't know it.")
+    @Parameters(index = "1", description = "Name of the category.  do 'ingester show categories' to get list of categories.")
     private String category;
 
-    static AppLogger log = AppLogger.getLogger(IgnoreCategoryCommand.class);
-
     @Override
-    public void run() {
+    public Integer call() {
         RepositoryIndex repoIndex = index.createIfNotExists(repo.trim());
-        if (!repoIndex.discussionCategories.containsKey(category)) {
-            index.updateDiscussionCategories(repoIndex);
-        }
-        if (!repoIndex.discussionCategories.containsKey(category)) {
-            log.error("Category [" + category + "] not found in " + repo);
-            log.info("Available categories: ");
-            List<DiscussionCategory> categories = index.discussionCategories(repo.trim());
-            for (DiscussionCategory discussionCategory : categories) {
-                log.thinking("[" + discussionCategory.id() + "]: " + discussionCategory.name() + " - "
-                        + discussionCategory.description());
+        Map<String, DiscussionCategory> discussionCategories = index.discussionCategories(repo.trim());
+        if (!discussionCategories.containsKey(category)) {
+            output.error("Category [" + category + "] not found in " + repo);
+            output.info("Available categories: ");
+            for (DiscussionCategory discussionCategory : discussionCategories.values()) {
+                output.thinking("[" + discussionCategory.name() + "]: " + discussionCategory.description());
             }
-            return;
+            return CommandLine.ExitCode.SOFTWARE;
         }
         repoIndex.ignoredCategories.add(category);
         index.save(repoIndex);
+        return CommandLine.ExitCode.OK;
     }
 
 }

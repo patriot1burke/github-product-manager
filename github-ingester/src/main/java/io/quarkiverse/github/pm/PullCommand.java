@@ -1,7 +1,7 @@
 package io.quarkiverse.github.pm;
 
 import jakarta.inject.Inject;
-
+import io.quarkiverse.github.index.GithubIndex;
 import io.quarkiverse.github.pm.util.AppLogger;
 import io.quarkiverse.github.pm.util.BaseCommand;
 import picocli.CommandLine.Command;

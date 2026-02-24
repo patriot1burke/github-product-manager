@@ -1,10 +1,12 @@
-package io.quarkiverse.github.pm;
+package io.quarkiverse.github.index;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -73,8 +75,6 @@ public class GithubIndex {
             }
         }
         RepositoryIndex repo = new RepositoryIndex();
-        repo.owner = owner;
-        repo.name = name;
         repo.repo = repoName;
         return repo;
     }
@@ -82,14 +82,15 @@ public class GithubIndex {
     public void save(RepositoryIndex repo) {
         try {
             Path indexFile = Path.of(baseDirectory, repo.repo, "index.json");
-            objectMapper.writeValue(indexFile.toFile(), repo);
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(indexFile.toFile(), repo);
         } catch (Exception e) {
             throw new RuntimeException("Failed to save repo", e);
         }
     }
 
-    public List<DiscussionCategory> discussionCategories(String repoName) {
-        List<DiscussionCategory> categories = new ArrayList<>();
+
+    public Map<String, DiscussionCategory> discussionCategories(String repoName) {
+        Map<String, DiscussionCategory> categories = new HashMap<>();
         GithubAPI.Repository repository = github.repository(repoName);
         DiscussionCategoryConnection discussionCategories = null;
         String after = null;
@@ -101,16 +102,15 @@ public class GithubIndex {
                 after = discussionCategories.pageInfo().endCursor();
             }
             for (DiscussionCategory discussionCategory : discussionCategories.nodes()) {
-                categories.add(discussionCategory);
+                categories.put(discussionCategory.name(), discussionCategory);
             }
         } while (discussionCategories.pageInfo().hasNextPage());
         return categories;
     }
-
-    public List<Label> labels(String repoName) {
+    public Map<String, Label> labels(String repoName) {
         GithubAPI.Repository repository = github.repository(repoName);
         LabelConnection connection = null;
-        List<Label> result = new ArrayList<>();
+        Map<String, Label> result = new HashMap<>();
         String after = null;
         do {
             if (after == null) {
@@ -119,25 +119,11 @@ public class GithubIndex {
                 connection = repository.labels(100, after);
             }
             for (Label label : connection.nodes()) {
-                result.add(label);
+                result.put(label.name(), label);
             }
             after = connection.pageInfo().endCursor();
         } while (connection.pageInfo().hasNextPage());
         return result;
-    }
-
-    public void updateLabels(RepositoryIndex repo) {
-        List<Label> labels = labels(repo.repo);
-        for (Label label : labels) {
-            repo.labels.put(label.id(), label);
-        }
-    }
-
-    public void updateDiscussionCategories(RepositoryIndex repo) {
-        List<DiscussionCategory> categories = discussionCategories(repo.repo);
-        for (DiscussionCategory discussionCategory : categories) {
-            repo.discussionCategories.put(discussionCategory.id(), discussionCategory);
-        }
     }
 
     public void pullDiscussions4(String repoName) throws Exception {
