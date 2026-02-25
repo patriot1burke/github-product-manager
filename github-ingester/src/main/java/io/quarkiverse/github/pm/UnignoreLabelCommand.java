@@ -1,19 +1,20 @@
 package io.quarkiverse.github.pm;
 
-import java.util.List;
+import java.util.concurrent.Callable;
 
 import jakarta.inject.Inject;
 
-import io.quarkiverse.github.api.Labels.Label;
-import io.quarkiverse.github.pm.util.AppLogger;
+import io.quarkiverse.github.index.GithubIndexService;
+import io.quarkiverse.github.index.RepositoryIndex;
 import io.quarkiverse.github.pm.util.BaseCommand;
+import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "label", description = "Unignore a label")
-public class UnignoreLabelCommand extends BaseCommand implements Runnable {
+public class UnignoreLabelCommand extends BaseCommand implements Callable<Integer> {
     @Inject
-    GithubIndex index;
+    GithubIndexService index;
 
     @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
@@ -21,32 +22,20 @@ public class UnignoreLabelCommand extends BaseCommand implements Runnable {
     @Parameters(index = "1", description = "ID of the label.  do 'ingester show labels' to get the ID if you don't know it.")
     private String label;
 
-    static AppLogger log = AppLogger.getLogger(UnignoreLabelCommand.class);
-
     @Override
-    public void run() {
+    public Integer call() throws Exception {
         if (!index.exists(repo.trim())) {
-            return;
+            output.error("Repository [" + repo + "] not found");
+            return CommandLine.ExitCode.SOFTWARE;
         }
         RepositoryIndex repoIndex = index.load(repo.trim());
-        if (!repoIndex.labels.containsKey(label)) {
-            index.updateDiscussionCategories(repoIndex);
-        }
-        if (!repoIndex.labels.containsKey(label)) {
-            log.error("Label [" + label + "] not found in " + repo);
-            log.info("Available labels: ");
-            List<Label> labels = index.labels(repo.trim());
-            for (Label label : labels) {
-                log.thinking("[" + label.id() + "]: " + label.name() + " - "
-                        + label.description());
-            }
-            return;
-        }
         if (!repoIndex.ignoredLabels.contains(label)) {
-            return;
+            output.warn("Label [" + label + "] not found in ignore list for " + repo);
+            return CommandLine.ExitCode.SOFTWARE;
         }
         repoIndex.ignoredLabels.remove(label);
         index.save(repoIndex);
+        return CommandLine.ExitCode.OK;
     }
 
 }

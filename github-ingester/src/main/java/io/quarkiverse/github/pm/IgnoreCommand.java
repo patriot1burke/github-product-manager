@@ -11,7 +11,7 @@ import picocli.CommandLine.Command;
 public class IgnoreCommand extends BaseCommand implements Callable<Integer> {
 
     @Override
-    public Integer call()  {
+    public Integer call() {
         output.info("Subcommands to ignore things when ingesting.");
         spec.commandLine().usage(output.out());
 

@@ -3,9 +3,7 @@ package io.quarkiverse.github.index;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -26,8 +24,8 @@ import io.quarkiverse.github.api.Labels.LabelConnection;
 import io.quarkiverse.github.pm.util.AppLogger;
 
 @ApplicationScoped
-public class GithubIndex {
-    static AppLogger log = AppLogger.getLogger(GithubIndex.class);
+public class GithubIndexService {
+    static AppLogger log = AppLogger.getLogger(GithubIndexService.class);
 
     @ConfigProperty(name = "product.manager.cache.dir")
     String baseDirectory;
@@ -88,7 +86,6 @@ public class GithubIndex {
         }
     }
 
-
     public Map<String, DiscussionCategory> discussionCategories(String repoName) {
         Map<String, DiscussionCategory> categories = new HashMap<>();
         GithubAPI.Repository repository = github.repository(repoName);
@@ -107,6 +104,7 @@ public class GithubIndex {
         } while (discussionCategories.pageInfo().hasNextPage());
         return categories;
     }
+
     public Map<String, Label> labels(String repoName) {
         GithubAPI.Repository repository = github.repository(repoName);
         LabelConnection connection = null;

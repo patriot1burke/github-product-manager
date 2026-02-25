@@ -2,6 +2,7 @@ package io.quarkiverse.graphql.client;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -156,7 +157,7 @@ public class GraphQLClient {
                         jsonRequest = objectMapper.writeValueAsString(Map.of("query", query, "variables", variables));
                     }
                     // System.out.println("---- JSON Request ----");
-                    // System.out.println(jsonRequest);
+                    //System.out.println(jsonRequest);
                     // System.out.println("---- End JSON Request ----");
                     Builder request = target.target.request();
                     for (Map.Entry<String, String> entry : headers.entrySet()) {
@@ -261,6 +262,9 @@ public class GraphQLClient {
                 MappingBuilder base) {
             Map<String, MethodMapping> methodMap = new HashMap<>();
             for (Method method : type.getMethods()) {
+                if (Modifier.isStatic(method.getModifiers())) {
+                    continue;
+                }
                 MappingBuilder requestBuilder = base.copy();
                 List<String> argMap = fillBuilder(method, requestBuilder);
                 Map<String, MethodMapping> proxyMapping = null;

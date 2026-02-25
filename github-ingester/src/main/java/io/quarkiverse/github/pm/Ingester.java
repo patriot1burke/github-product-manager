@@ -13,7 +13,8 @@ import picocli.CommandLine.Command;
 @TopCommand
 @Command(name = "ingester", mixinStandardHelpOptions = true, subcommands = {
         PullCommand.class,
-        ShowCommand.class }, description = "Tool for pulling Github issues, discussions, summarizing, and ingesting into a vector database")
+        ShowCommand.class,
+        ReportCommand.class }, description = "Tool for pulling Github issues, discussions, summarizing, and ingesting into a vector database")
 public class Ingester extends BaseCommand implements Callable<Integer> {
     public Ingester() {
         AppLogger.Factory.instance = new AppLoggerFactory() {

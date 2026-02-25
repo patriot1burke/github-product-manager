@@ -1,7 +1,8 @@
 package io.quarkiverse.github.pm;
 
 import jakarta.inject.Inject;
-import io.quarkiverse.github.index.GithubIndex;
+
+import io.quarkiverse.github.index.GithubIndexService;
 import io.quarkiverse.github.pm.util.AppLogger;
 import io.quarkiverse.github.pm.util.BaseCommand;
 import picocli.CommandLine.Command;
@@ -10,7 +11,7 @@ import picocli.CommandLine.Parameters;
 @Command(name = "pull", description = "Pull issues from Github")
 public class PullCommand extends BaseCommand implements Runnable {
     @Inject
-    GithubIndex discussions;
+    GithubIndexService discussions;
 
     @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;

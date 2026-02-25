@@ -1,15 +1,13 @@
 package io.quarkiverse.github.pm;
 
-import jakarta.inject.Inject;
-
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import jakarta.inject.Inject;
+
 import io.quarkiverse.github.api.Discussions.DiscussionCategory;
-import io.quarkiverse.github.index.GithubIndex;
+import io.quarkiverse.github.index.GithubIndexService;
 import io.quarkiverse.github.index.RepositoryIndex;
-import io.quarkiverse.github.pm.util.AppLogger;
 import io.quarkiverse.github.pm.util.BaseCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -18,7 +16,7 @@ import picocli.CommandLine.Parameters;
 @Command(name = "category", description = "Ignore a discussion category")
 public class IgnoreCategoryCommand extends BaseCommand implements Callable<Integer> {
     @Inject
-    GithubIndex index;
+    GithubIndexService index;
 
     @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;

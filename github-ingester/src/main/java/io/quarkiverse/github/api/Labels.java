@@ -3,18 +3,19 @@ package io.quarkiverse.github.api;
 import java.util.List;
 
 public interface Labels {
-    public record Label(String id, String name, String description) {
+    public record Label(String name, String description) {
 
     }
 
-    public record LabelIdOnly(String id) {
+    public record LabelNameOnly(String name) {
 
     }
 
-    public record LabelConnection(PageInfo pageInfo, List<Label> nodes) {
+    public record LabelConnection(PageInfo pageInfo, List<Label> nodes) implements GithubConnection<Label> {
     }
 
-    public record LabelConnectionIdOnly(PageInfo pageInfo, List<LabelIdOnly> nodes) {
+    public record LabelConnectionNameOnly(PageInfo pageInfo,
+            List<LabelNameOnly> nodes) implements GithubConnection<LabelNameOnly> {
     }
 
 }
