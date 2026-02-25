@@ -85,9 +85,9 @@ public class ReportService {
 
     }
 
-    private Tally tallyDiscussions(Repository repository, RepositoryIndex repoIndex, DateRange dateRange) {
+    public Tally tallyDiscussions(Repository repository, RepositoryIndex repoIndex, DateRange dateRange) {
         log.thinking("Tallying discussions...");
-        IterableConnection<Discussion> discussions = Repository.discussions(repository, 20);
+        IterableConnection<Discussion> discussions = Repository.fullDiscussions(repository, 20);
         Map<String, AtomicInteger> labelCounts = new HashMap<>();
         long afterTime = dateRange.fromToday();
         int numDiscussions = 0;
@@ -118,12 +118,14 @@ public class ReportService {
         return new Tally(numDiscussions, unlabeledDiscussions, labelReports);
     }
 
-    private Tally tallyIssues(Repository repository, RepositoryIndex repoIndex, DateRange dateRange) {
-        IterableConnection<Issues.Issue> issues = Repository.issues(repository, 20, dateRange.fromString());
+    public Tally tallyIssues(Repository repository, RepositoryIndex repoIndex, DateRange dateRange) {
+        log.thinking("Tallying issues...");
+        IterableConnection<Issues.IssueForBasicReport> issues = Repository.basicReportIssues(repository, 20,
+                dateRange.fromString());
         Map<String, AtomicInteger> labelCounts = new HashMap<>();
         int numIssues = 0;
         int unlabeledIssues = 0;
-        for (Issues.Issue issue : issues) {
+        for (Issues.IssueForBasicReport issue : issues) {
             numIssues++;
             if (issue.labels().nodes().isEmpty()) {
                 unlabeledIssues++;

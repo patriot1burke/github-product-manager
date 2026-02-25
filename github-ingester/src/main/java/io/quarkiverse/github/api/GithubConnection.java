@@ -10,22 +10,20 @@ public interface GithubConnection<T> {
     List<T> nodes();
 
     interface InitialQuery<T> {
-        GithubConnection<T> query(int first);
+        GithubConnection<T> query();
     }
 
     interface PaginateQuery<T> {
-        GithubConnection<T> query(int first, String after);
+        GithubConnection<T> query(String cursor);
     }
 
     public class IterableConnection<T> implements Iterable<T> {
         private final InitialQuery<T> initialQuery;
         private final PaginateQuery<T> paginateQuery;
-        private final int pageSize;
 
-        public IterableConnection(InitialQuery<T> initialQuery, PaginateQuery<T> paginateQuery, int pageSize) {
+        public IterableConnection(InitialQuery<T> initialQuery, PaginateQuery<T> paginateQuery) {
             this.initialQuery = initialQuery;
             this.paginateQuery = paginateQuery;
-            this.pageSize = pageSize;
         }
 
         class ConnectionIterator implements Iterator<T> {
@@ -34,7 +32,7 @@ public interface GithubConnection<T> {
             private GithubConnection currentConnection = null;
 
             ConnectionIterator() {
-                currentConnection = initialQuery.query(pageSize);
+                currentConnection = initialQuery.query();
                 currentIterator = currentConnection.nodes().iterator();
             }
 
@@ -48,7 +46,7 @@ public interface GithubConnection<T> {
                 if (currentIterator.hasNext()) {
                     return currentIterator.next();
                 } else if (currentConnection.pageInfo().hasNextPage()) {
-                    currentConnection = paginateQuery.query(pageSize, currentConnection.pageInfo().endCursor());
+                    currentConnection = paginateQuery.query(currentConnection.pageInfo().endCursor());
                     currentIterator = currentConnection.nodes().iterator();
                     return currentIterator.next();
                 } else {

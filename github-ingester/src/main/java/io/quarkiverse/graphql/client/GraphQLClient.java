@@ -156,6 +156,7 @@ public class GraphQLClient {
                     } else {
                         jsonRequest = objectMapper.writeValueAsString(Map.of("query", query, "variables", variables));
                     }
+                    //System.out.println(query);
                     // System.out.println("---- JSON Request ----");
                     //System.out.println(jsonRequest);
                     // System.out.println("---- End JSON Request ----");
@@ -184,6 +185,8 @@ public class GraphQLClient {
                     }
                     return objectMapper.treeToValue(data, objectMapper.constructType(returnType));
                 } catch (Exception e) {
+                    Log.error("Failed to execute query: ");
+                    Log.error(query);
                     throw new RuntimeException("Failed to execute query: ", e);
                 }
             }
@@ -228,7 +231,9 @@ public class GraphQLClient {
                 builder.paramTypes = new ArrayList<>(paramTypes);
                 builder.variableValues = new HashMap<>(variableValues);
                 builder.fields = new ArrayList<>(fields);
-                builder.namespacedParams = new HashMap<>(namespacedParams);
+                for (Map.Entry<String, List<String>> entry : namespacedParams.entrySet()) {
+                    builder.namespacedParams.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+                }
                 builder.baseVariable = baseVariable;
                 builder.baseNamespace = baseNamespace;
                 return builder;
@@ -241,7 +246,8 @@ public class GraphQLClient {
                 MethodMapping mapping = entry.getValue();
                 if (mapping.query() != null) {
                     methodInvokerMap.put(entry.getKey(),
-                            new QueryInvoker(mapping.query(), mapping.fieldPrefix(), mapping.argMap(), mapping.returnType()));
+                            new QueryInvoker(mapping.query(), mapping.fieldPrefix(), mapping.argMap(),
+                                    mapping.returnType()));
                 } else if (mapping.methodMap() != null) {
                     Map<String, MethodInvoker> proxyMap = buildInvokerMap(mapping.methodMap());
                     NamespaceMethod namespaceMethod = new NamespaceMethod(mapping.returnType, mapping.argMap(),
@@ -287,26 +293,42 @@ public class GraphQLClient {
 
         public static List<String> fillBuilder(Method method, MappingBuilder builder) {
             // System.out.println("fillBuilder: " + method.toGenericString());
+            boolean argsOnly = method.isAnnotationPresent(ArgsOnly.class);
             Parameter[] parameters = method.getParameters();
-            GraphField graphField = method.getAnnotation(GraphField.class);
-            String fieldName = graphField == null ? method.getName() : graphField.value();
-
-            if (builder.baseNamespace == null) {
-                builder.baseNamespace = "";
-            } else {
-                builder.baseNamespace = builder.baseNamespace + ".";
-            }
-            Namespace methodNamespace = method.getAnnotation(Namespace.class);
-            if (methodNamespace != null) {
-                for (String value : methodNamespace.value().split("\\.")) {
-                    builder.fields.add(value);
+            if (argsOnly) {
+                Namespace methodNamespace = method.getAnnotation(Namespace.class);
+                if (methodNamespace != null) {
+                    for (String value : methodNamespace.value().split("\\.")) {
+                        builder.fields.add(value);
+                    }
+                    if (builder.baseNamespace == null) {
+                        builder.baseNamespace = "";
+                    } else {
+                        builder.baseNamespace = builder.baseNamespace + ".";
+                    }
+                    builder.baseNamespace = builder.baseNamespace + methodNamespace.value() + ".";
                 }
-                builder.baseNamespace = builder.baseNamespace + methodNamespace.value() + ".";
-            }
-            builder.baseNamespace += fieldName;
+            } else {
+                GraphField graphField = method.getAnnotation(GraphField.class);
+                String fieldName = graphField == null ? method.getName() : graphField.value();
 
-            // String fieldCall = fieldName;
-            builder.fields.add(fieldName);
+                if (builder.baseNamespace == null) {
+                    builder.baseNamespace = "";
+                } else {
+                    builder.baseNamespace = builder.baseNamespace + ".";
+                }
+                Namespace methodNamespace = method.getAnnotation(Namespace.class);
+                if (methodNamespace != null) {
+                    for (String value : methodNamespace.value().split("\\.")) {
+                        builder.fields.add(value);
+                    }
+                    builder.baseNamespace = builder.baseNamespace + methodNamespace.value() + ".";
+                }
+                builder.baseNamespace += fieldName;
+
+                // String fieldCall = fieldName;
+                builder.fields.add(fieldName);
+            }
             List<String> argMap = new ArrayList<>();
             for (int i = 0; i < parameters.length; i++) {
                 String variable = builder.baseVariable + parameters[i].getName();
@@ -398,7 +420,8 @@ public class GraphQLClient {
             }
             // System.out.println("generateQuery: " +
             // method.getGenericReturnType().toString());
-            generateQuery(objectMapper, query, builder, method.getReturnType(), method.getGenericReturnType(), indent, ns,
+            generateQuery(objectMapper, query, builder, method.getReturnType(), method.getGenericReturnType(), indent,
+                    ns,
                     true);
 
             for (int i = 0; i < nested; i++) {
@@ -409,7 +432,8 @@ public class GraphQLClient {
             return query.toString();
         }
 
-        public static void generateQuery(ObjectMapper objectMapper, StringBuilder query, MappingBuilder builder, Class<?> clazz,
+        public static void generateQuery(ObjectMapper objectMapper, StringBuilder query, MappingBuilder builder,
+                Class<?> clazz,
                 Type type, int indent,
                 String namespace, boolean first) {
 
@@ -430,7 +454,7 @@ public class GraphQLClient {
                     nextNamespace = namespace + "." + name;
                 }
                 List<String> params = builder.namespacedParams.get(nextNamespace);
-                //System.out.println("lookup: " + nextNamespace + ": " + params);
+                // System.out.println("lookup: " + nextNamespace + ": " + params);
                 if (params != null) {
                     generateParams(query, params);
                 }

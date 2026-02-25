@@ -26,4 +26,13 @@ public interface Issues {
 
     public record IssueConnection(PageInfo pageInfo, List<Issue> nodes) implements GithubConnection<Issue> {
     }
+
+    record IssueForBasicReport(IssueTypeNameOnly issueType, String createdAt,
+            String updatedAt, LabelConnectionNameOnly labels) {
+
+    }
+
+    public record IssueConnectionForBasicReport(PageInfo pageInfo,
+            List<IssueForBasicReport> nodes) implements GithubConnection<IssueForBasicReport> {
+    }
 }

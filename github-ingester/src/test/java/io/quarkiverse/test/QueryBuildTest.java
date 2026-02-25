@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.quarkiverse.graphql.client.ArgsOnly;
 import io.quarkiverse.graphql.client.DefaultVariable;
 import io.quarkiverse.graphql.client.GraphQL;
 import io.quarkiverse.graphql.client.GraphQLClient;
@@ -163,6 +164,31 @@ public class QueryBuildTest {
     public void testPreMap() throws Exception {
         Map<String, GraphQLClient.QueryBuilder.MethodMapping> methodMapping = GraphQLClient.QueryBuilder
                 .getMethodMapping(new ObjectMapper(), Github.class);
+        printMapping(methodMapping);
+    }
+
+    public interface API {
+
+        public interface Repository {
+            Discussions discussions(int first);
+
+        }
+
+        public interface Discussions {
+            @ArgsOnly
+            @Query
+            DiscussionConnection nextPage(String after);
+        }
+
+        Repository repository(String owner, String name);
+
+    }
+
+    @Test
+    public void testArgsOnly() throws Exception {
+        System.out.println("==================== testArgsOnly ====================");
+        Map<String, GraphQLClient.QueryBuilder.MethodMapping> methodMapping = GraphQLClient.QueryBuilder
+                .getMethodMapping(new ObjectMapper(), API.class);
         printMapping(methodMapping);
     }
 

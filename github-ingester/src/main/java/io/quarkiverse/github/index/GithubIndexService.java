@@ -13,10 +13,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkiverse.github.api.Discussions.Discussion;
 import io.quarkiverse.github.api.Discussions.DiscussionCategory;
 import io.quarkiverse.github.api.Discussions.DiscussionCategoryConnection;
-import io.quarkiverse.github.api.Discussions.DiscussionConnection;
 import io.quarkiverse.github.api.Github;
 import io.quarkiverse.github.api.GithubAPI;
 import io.quarkiverse.github.api.Labels.Label;
@@ -122,22 +120,5 @@ public class GithubIndexService {
             after = connection.pageInfo().endCursor();
         } while (connection.pageInfo().hasNextPage());
         return result;
-    }
-
-    public void pullDiscussions4(String repoName) throws Exception {
-        GithubAPI.Repository repository = github.repository(repoName);
-        DiscussionConnection discussions = repository.discussions(10);
-        log.info("************************************");
-        int num = 1;
-        for (Discussion discussion : discussions.nodes()) {
-            log.info("Discussion[" + num++ + "]: " + discussion.title() + " - " + discussion.createdAt());
-        }
-        if (discussions.pageInfo().hasNextPage()) {
-            String after = discussions.pageInfo().endCursor();
-            discussions = repository.discussions(10, after);
-            for (Discussion discussion : discussions.nodes()) {
-                log.info("Discussion[" + num++ + "]: " + discussion.title() + " - " + discussion.createdAt());
-            }
-        }
     }
 }
