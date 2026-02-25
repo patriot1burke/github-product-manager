@@ -86,6 +86,7 @@ public class ReportService {
     }
 
     private Tally tallyDiscussions(Repository repository, RepositoryIndex repoIndex, DateRange dateRange) {
+        log.thinking("Tallying discussions...");
         IterableConnection<Discussion> discussions = Repository.discussions(repository, 20);
         Map<String, AtomicInteger> labelCounts = new HashMap<>();
         long afterTime = dateRange.fromToday();

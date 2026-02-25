@@ -12,6 +12,8 @@ import picocli.CommandLine.Command;
 
 @TopCommand
 @Command(name = "ingester", mixinStandardHelpOptions = true, subcommands = {
+        IgnoreCommand.class,
+        UnignoreCommand.class,
         PullCommand.class,
         ShowCommand.class,
         ReportCommand.class }, description = "Tool for pulling Github issues, discussions, summarizing, and ingesting into a vector database")

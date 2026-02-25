@@ -38,7 +38,7 @@ public class GithubIndexService {
 
     public boolean exists(String repoName) {
         Path path = Path.of(baseDirectory, repoName);
-        Path indexPath = path.resolve("repo.json");
+        Path indexPath = path.resolve("index.json");
         return Files.exists(indexPath);
     }
 
@@ -59,11 +59,11 @@ public class GithubIndexService {
         if (spit.length != 2) {
             throw new RuntimeException("Invalid repo name: " + repoName);
         }
-        String owner = spit[0];
-        String name = spit[1];
         if (exists(repoName)) {
+            log.debugv("Index already exists for repo: {0}", repoName);
             return load(repoName);
         }
+        log.debugv("Creating index for repo: {0}", repoName);
         Path path = Path.of(baseDirectory, repoName);
         if (!Files.exists(path)) {
             try {

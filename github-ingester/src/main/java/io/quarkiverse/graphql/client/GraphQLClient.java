@@ -339,7 +339,7 @@ public class GraphQLClient {
             if (defaultVariable != null) {
                 addDefaultVariable(builder, defaultVariable);
             }
-            builder.baseVariable += fieldName;
+            builder.baseVariable += "_";
             return argMap;
         }
 
