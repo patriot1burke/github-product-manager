@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.quarkiverse.github.api.Discussions.Discussion;
 import io.quarkiverse.graphql.client.ArgsOnly;
 import io.quarkiverse.graphql.client.DefaultVariables;
 import io.quarkiverse.graphql.client.GraphQL;
@@ -22,7 +23,9 @@ import io.quarkiverse.graphql.client.Namespace;
 import io.quarkiverse.graphql.client.Query;
 import io.quarkiverse.graphql.client.QueryTemplate;
 import io.quarkiverse.graphql.client.Variable;
+import io.quarkus.test.junit.QuarkusTest;
 
+@QuarkusTest
 public class QueryBuildTest {
 
     @Test
@@ -56,7 +59,8 @@ public class QueryBuildTest {
             assertTrue(matcher.lookingAt());
             String function = matcher.group(1);
             String query = matcher.replaceFirst(Matcher.quoteReplacement("query " + function + "($owner: String!) {"));
-            assertEquals("query Repository($owner: String!) { repository(owner: $owner, name: \"quarkus\") { name } }", query);
+            assertEquals("query Repository($owner: String!) { repository(owner: $owner, name: \"quarkus\") { name } }",
+                    query);
         }
     }
 
@@ -119,7 +123,8 @@ public class QueryBuildTest {
             String query = GraphQL.QueryBuilder.queryMapping(method);
             queryMap.put(method.getName(), query);
         }
-        assertEquals(queryMap.get("queryNoParams"), "query { repository(owner: \"quarkusio\", name: \"quarkus\") { name } }");
+        assertEquals(queryMap.get("queryNoParams"),
+                "query { repository(owner: \"quarkusio\", name: \"quarkus\") { name } }");
         assertEquals(queryMap.get("queryStringParams"),
                 "query($owner: Foo!) { repository(owner: $owner, name: \"quarkus\") { name } }");
         assertEquals(queryMap.get("queryParams"),
@@ -133,22 +138,26 @@ public class QueryBuildTest {
         assertEquals(queryMap.size(), 6);
     }
 
-    public record Author(String login) {
+    interface Testit {
+        public record Author(String login) {
+        }
+
+        public record Discussion(String id, String title, Author author, String createdAt, String updatedAt) {
+        }
+
+        public record PageInfo(boolean hasNextPage, String endCursor) {
+        }
+
+        public record DiscussionConnection(int totalCount, PageInfo pageInfo, List<Discussion> nodes) {
+        }
+
     }
 
-    public record Discussion(String id, String title, Author author, String createdAt, String updatedAt) {
-    }
-
-    public record PageInfo(boolean hasNextPage, String endCursor) {
-    }
-
-    public record DiscussionConnection(int totalCount, PageInfo pageInfo, List<Discussion> nodes) {
-    }
-
-    public interface Github {
+    public interface Github_test {
         public interface Repository {
             @Query
-            DiscussionConnection discussions(int first, @Namespace(".nodes") @Variable("first") int commentsFirst);
+            Testit.DiscussionConnection discussions(int first,
+                    @Namespace(".nodes") @Variable("first") int commentsFirst);
         }
 
         Repository repository(String owner, String name);
@@ -156,28 +165,30 @@ public class QueryBuildTest {
         @Namespace("repository")
         @Query
         @DefaultVariables("orderBy: {field: CREATED_AT, direction: DESC}")
-        DiscussionConnection discussions(@Namespace("repository") String owner, @Namespace("repository") String name,
+        Testit.DiscussionConnection discussions(@Namespace("repository") String owner,
+                @Namespace("repository") String name,
                 int first);
     }
 
     @Test
     public void testPreMap() throws Exception {
         Map<String, GraphQLClient.QueryBuilder.MethodMapping> methodMapping = GraphQLClient.QueryBuilder
-                .getMethodMapping(new ObjectMapper(), Github.class);
+                .getMethodMapping(new ObjectMapper(), Github_test.class);
         printMapping(methodMapping);
     }
 
     public interface API {
 
         public interface Repository {
-            Discussions discussions(int first);
+            @Query
+            Testit.DiscussionConnection discussions(int first);
 
         }
 
         public interface Discussions {
             @ArgsOnly
             @Query
-            DiscussionConnection nextPage(String after);
+            Testit.DiscussionConnection nextPage(String after);
         }
 
         Repository repository(String owner, String name);
