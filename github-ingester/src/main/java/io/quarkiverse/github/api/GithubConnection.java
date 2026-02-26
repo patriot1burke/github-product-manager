@@ -9,20 +9,14 @@ public interface GithubConnection<T> {
 
     List<T> nodes();
 
-    interface InitialQuery<T> {
-        GithubConnection<T> query();
-    }
-
     interface PaginateQuery<T> {
         GithubConnection<T> query(String cursor);
     }
 
     public class IterableConnection<T> implements Iterable<T> {
-        private final InitialQuery<T> initialQuery;
         private final PaginateQuery<T> paginateQuery;
 
-        public IterableConnection(InitialQuery<T> initialQuery, PaginateQuery<T> paginateQuery) {
-            this.initialQuery = initialQuery;
+        public IterableConnection(PaginateQuery<T> paginateQuery) {
             this.paginateQuery = paginateQuery;
         }
 
@@ -32,7 +26,7 @@ public interface GithubConnection<T> {
             private GithubConnection currentConnection = null;
 
             ConnectionIterator() {
-                currentConnection = initialQuery.query();
+                currentConnection = paginateQuery.query(null);
                 currentIterator = currentConnection.nodes().iterator();
             }
 

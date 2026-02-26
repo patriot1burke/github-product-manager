@@ -3,6 +3,8 @@ package io.quarkiverse.graphql.client;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.RecordComponent;
 
+import jakarta.annotation.Nullable;
+
 public class Variables {
 
     public static String inputType(Parameter parameter) {
@@ -10,39 +12,44 @@ public class Variables {
         if (annotation != null) {
             return annotation.value();
         }
-        return inputType(parameter.getType());
-    }
-
-    public static String inputType(Class<?> type) {
-        InputType annotation = type.getAnnotation(InputType.class);
+        Class<?> type = parameter.getType();
+        annotation = type.getAnnotation(InputType.class);
         if (annotation != null) {
             return annotation.value();
         }
+        String inputType = inputType(type);
+        if (parameter.isAnnotationPresent(Nullable.class)) {
+            return inputType;
+        }
+        return inputType + "!";
+    }
+
+    private static String inputType(Class<?> type) {
         if (type == String.class) {
-            return "String!";
+            return "String";
         }
         if (type.isPrimitive()) {
             if (type == boolean.class) {
-                return "Boolean!";
+                return "Boolean";
             }
             if (type == int.class) {
-                return "Int!";
+                return "Int";
             }
             if (type == float.class) {
-                return "Float!";
+                return "Float";
             }
             throw new IllegalArgumentException("Unsupported primitive type: " + type);
         }
         if (type.equals(Boolean.class)) {
-            return "Boolean!";
+            return "Boolean";
         }
         if (type.equals(Integer.class)) {
-            return "Int!";
+            return "Int";
         }
         if (type.equals(Float.class)) {
-            return "Float!";
+            return "Float";
         }
-        return type.getSimpleName() + "!";
+        return type.getSimpleName();
     }
 
     public static String variable(Object value) {

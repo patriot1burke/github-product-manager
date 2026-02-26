@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.graphql.client.ArgsOnly;
-import io.quarkiverse.graphql.client.DefaultVariable;
+import io.quarkiverse.graphql.client.DefaultVariables;
 import io.quarkiverse.graphql.client.GraphQL;
 import io.quarkiverse.graphql.client.GraphQLClient;
 import io.quarkiverse.graphql.client.Namespace;
@@ -155,7 +155,7 @@ public class QueryBuildTest {
 
         @Namespace("repository")
         @Query
-        @DefaultVariable(name = "orderBy", value = "{field: CREATED_AT, direction: DESC}")
+        @DefaultVariables("orderBy: {field: CREATED_AT, direction: DESC}")
         DiscussionConnection discussions(@Namespace("repository") String owner, @Namespace("repository") String name,
                 int first);
     }

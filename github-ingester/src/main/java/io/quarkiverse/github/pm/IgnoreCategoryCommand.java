@@ -1,11 +1,14 @@
 package io.quarkiverse.github.pm;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
 import jakarta.inject.Inject;
 
 import io.quarkiverse.github.api.Discussions.DiscussionCategory;
+import io.quarkiverse.github.api.Github;
+import io.quarkiverse.github.api.GithubConnection.IterableConnection;
 import io.quarkiverse.github.index.GithubIndexService;
 import io.quarkiverse.github.index.RepositoryIndex;
 import io.quarkiverse.github.pm.util.BaseCommand;
@@ -18,6 +21,9 @@ public class IgnoreCategoryCommand extends BaseCommand implements Callable<Integ
     @Inject
     GithubIndexService index;
 
+    @Inject
+    Github github;
+
     @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
 
@@ -27,11 +33,15 @@ public class IgnoreCategoryCommand extends BaseCommand implements Callable<Integ
     @Override
     public Integer call() {
         RepositoryIndex repoIndex = index.createIfNotExists(repo.trim());
-        Map<String, DiscussionCategory> discussionCategories = index.discussionCategories(repo.trim());
-        if (!discussionCategories.containsKey(category)) {
+        IterableConnection<DiscussionCategory> discussionCategories = github.repository(repo).discussionCategories();
+        Map<String, DiscussionCategory> categories = new HashMap<>();
+        for (DiscussionCategory discussionCategory : discussionCategories) {
+            categories.put(discussionCategory.name(), discussionCategory);
+        }
+        if (!categories.containsKey(category)) {
             output.error("Category [" + category + "] not found in " + repo);
             output.info("Available categories: ");
-            for (DiscussionCategory discussionCategory : discussionCategories.values()) {
+            for (DiscussionCategory discussionCategory : categories.values()) {
                 output.thinking("[" + discussionCategory.name() + "]: " + discussionCategory.description());
             }
             return CommandLine.ExitCode.SOFTWARE;

@@ -120,6 +120,9 @@ public class GraphQLClient {
 
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                if (method.isDefault()) {
+                    return InvocationHandler.invokeDefault(proxy, method, args);
+                }
                 MethodInvoker methodInvoker = methodMap.get(method.toGenericString());
                 if (methodInvoker == null) {
                     throw new RuntimeException("Method implementation not found: " + method.toGenericString());
@@ -203,6 +206,9 @@ public class GraphQLClient {
 
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                if (method.isDefault()) {
+                    return InvocationHandler.invokeDefault(proxy, method, args);
+                }
                 MethodInvoker methodInvoker = methodMap.get(method.toGenericString());
                 if (methodInvoker == null) {
                     throw new RuntimeException("Method implementation not found: " + method.toGenericString());
@@ -268,7 +274,7 @@ public class GraphQLClient {
                 MappingBuilder base) {
             Map<String, MethodMapping> methodMap = new HashMap<>();
             for (Method method : type.getMethods()) {
-                if (Modifier.isStatic(method.getModifiers())) {
+                if (Modifier.isStatic(method.getModifiers()) || method.isDefault()) {
                     continue;
                 }
                 MappingBuilder requestBuilder = base.copy();
@@ -353,21 +359,28 @@ public class GraphQLClient {
             }
             DefaultVariables defaultVariables = method.getAnnotation(DefaultVariables.class);
             if (defaultVariables != null) {
-                for (DefaultVariable defaultVariable : defaultVariables.value()) {
+                for (String defaultVariable : defaultVariables.value()) {
                     addDefaultVariable(builder, defaultVariable);
                 }
-            }
-            DefaultVariable defaultVariable = method.getAnnotation(DefaultVariable.class);
-            if (defaultVariable != null) {
-                addDefaultVariable(builder, defaultVariable);
             }
             builder.baseVariable += "_";
             return argMap;
         }
 
-        private static void addDefaultVariable(MappingBuilder builder, DefaultVariable defaultVariable) {
+        private static void addDefaultVariable(MappingBuilder builder, String defaultVariable) {
+            int varEnd = defaultVariable.indexOf(":");
+            if (varEnd == -1) {
+                throw new RuntimeException("Invalid default variable: " + defaultVariable);
+            }
+            String fullName = defaultVariable.substring(0, varEnd);
+            String varValue = defaultVariable.substring(varEnd + 1);
+
+            String namespace = "";
+            if (fullName.contains(".")) {
+                namespace = fullName.substring(0, fullName.lastIndexOf("."));
+            }
+            String varName = fullName.substring(fullName.lastIndexOf(".") + 1);
             String mapKey = null;
-            String namespace = defaultVariable.namespace();
             if (namespace.isEmpty()) {
                 mapKey = builder.baseNamespace;
             } else if (namespace.startsWith(".")) {
@@ -375,8 +388,7 @@ public class GraphQLClient {
             } else {
                 mapKey = namespace;
             }
-            String param = defaultVariable.name() + ": " + defaultVariable.value();
-            builder.namespacedParams.computeIfAbsent(mapKey, k -> new ArrayList<>()).add(param);
+            builder.namespacedParams.computeIfAbsent(mapKey, k -> new ArrayList<>()).add(varName + ": " + varValue);
         }
 
         private static void generateParams(StringBuilder query, List<String> params) {

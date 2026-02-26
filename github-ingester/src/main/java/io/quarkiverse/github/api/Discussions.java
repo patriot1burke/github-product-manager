@@ -24,9 +24,7 @@ public interface Discussions {
             String updatedAt, LabelConnectionNameOnly labels, CommentConnection comments) {
     }
 
-    public record DiscussionConnection(PageInfo pageInfo, List<Discussion> nodes)
-            implements
-                GithubConnection<Discussion> {
+    public record DiscussionConnection(PageInfo pageInfo, List<Discussion> nodes) implements GithubConnection<Discussion> {
     }
 
     public record DiscussionForBasicReport(DiscussionCategoryNameOnly category,
@@ -34,8 +32,7 @@ public interface Discussions {
             String updatedAt, LabelConnectionNameOnly labels) {
     }
 
-    public record DiscussionConnectionForBasicReport(PageInfo pageInfo, List<DiscussionForBasicReport> nodes)
-            implements
-                GithubConnection<DiscussionForBasicReport> {
+    public record DiscussionConnectionForBasicReport(PageInfo pageInfo,
+            List<DiscussionForBasicReport> nodes) implements GithubConnection<DiscussionForBasicReport> {
     }
 }

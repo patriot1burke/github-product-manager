@@ -1,10 +1,13 @@
 package io.quarkiverse.github.pm;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
 import jakarta.inject.Inject;
 
+import io.quarkiverse.github.api.Github;
+import io.quarkiverse.github.api.GithubConnection.IterableConnection;
 import io.quarkiverse.github.api.Labels.Label;
 import io.quarkiverse.github.index.GithubIndexService;
 import io.quarkiverse.github.index.RepositoryIndex;
@@ -18,6 +21,9 @@ public class IgnoreLabelCommand extends BaseCommand implements Callable<Integer>
     @Inject
     GithubIndexService index;
 
+    @Inject
+    Github github;
+
     @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
 
@@ -27,11 +33,15 @@ public class IgnoreLabelCommand extends BaseCommand implements Callable<Integer>
     @Override
     public Integer call() throws Exception {
         RepositoryIndex repoIndex = index.createIfNotExists(repo.trim());
-        Map<String, Label> labels = index.labels(repo.trim());
-        if (!labels.containsKey(label)) {
+        IterableConnection<Label> labels = github.repository(repo).labels();
+        Map<String, Label> labelMap = new HashMap<>();
+        for (Label label : labels) {
+            labelMap.put(label.name(), label);
+        }
+        if (!labelMap.containsKey(label)) {
             output.error("Label [" + label + "] not found in " + repo);
             output.info("Available labels: ");
-            for (Label label : labels.values()) {
+            for (Label label : labelMap.values()) {
                 output.thinking("[" + label.name() + "]: " + label.description());
             }
             return CommandLine.ExitCode.SOFTWARE;
