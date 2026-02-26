@@ -8,7 +8,6 @@ import jakarta.inject.Inject;
 
 import io.quarkiverse.github.api.Discussions.DiscussionCategory;
 import io.quarkiverse.github.api.Github;
-import io.quarkiverse.github.api.GithubConnection.IterableConnection;
 import io.quarkiverse.github.index.GithubIndexService;
 import io.quarkiverse.github.index.RepositoryIndex;
 import io.quarkiverse.github.pm.util.BaseCommand;
@@ -33,7 +32,7 @@ public class IgnoreCategoryCommand extends BaseCommand implements Callable<Integ
     @Override
     public Integer call() {
         RepositoryIndex repoIndex = index.createIfNotExists(repo.trim());
-        IterableConnection<DiscussionCategory> discussionCategories = github.repository(repo).discussionCategories();
+        Iterable<DiscussionCategory> discussionCategories = github.repository(repo).discussionCategories();
         Map<String, DiscussionCategory> categories = new HashMap<>();
         for (DiscussionCategory discussionCategory : discussionCategories) {
             categories.put(discussionCategory.name(), discussionCategory);

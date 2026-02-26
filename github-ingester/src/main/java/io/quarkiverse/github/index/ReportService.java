@@ -15,7 +15,6 @@ import jakarta.inject.Inject;
 import io.quarkiverse.github.api.Discussions.DiscussionForBasicReport;
 import io.quarkiverse.github.api.Github;
 import io.quarkiverse.github.api.GithubAPI.Repository;
-import io.quarkiverse.github.api.GithubConnection.IterableConnection;
 import io.quarkiverse.github.api.Issues;
 import io.quarkiverse.github.api.Labels.LabelNameOnly;
 import io.quarkiverse.github.pm.util.AppLogger;
@@ -87,7 +86,7 @@ public class ReportService {
 
     public Tally tallyDiscussions(Repository repository, RepositoryIndex repoIndex, DateRange dateRange) {
         log.thinking("Tallying discussions...");
-        IterableConnection<DiscussionForBasicReport> discussions = repository.discussions().basicReport(20);
+        Iterable<DiscussionForBasicReport> discussions = repository.discussions().basicReport(20);
         Map<String, AtomicInteger> labelCounts = new HashMap<>();
         long afterTime = dateRange.fromToday();
         int numDiscussions = 0;
@@ -120,7 +119,7 @@ public class ReportService {
 
     public Tally tallyIssues(Repository repository, RepositoryIndex repoIndex, DateRange dateRange) {
         log.thinking("Tallying issues...");
-        IterableConnection<Issues.IssueForBasicReport> issues = repository.issues().basicReport(20,
+        Iterable<Issues.IssueForBasicReport> issues = repository.issues().basicReport(20,
                 dateRange.fromString());
         Map<String, AtomicInteger> labelCounts = new HashMap<>();
         int numIssues = 0;

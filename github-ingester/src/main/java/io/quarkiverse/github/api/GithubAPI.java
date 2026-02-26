@@ -22,14 +22,14 @@ public interface GithubAPI {
         @Query
         LabelConnection labels(int first, @Nullable String after);
 
-        default IterableConnection<Labels.Label> labels() {
+        default Iterable<Labels.Label> labels() {
             return new IterableConnection<Labels.Label>((after) -> labels(100, after));
         }
 
         @Query
         DiscussionCategoryConnection discussionCategories(int first, @Nullable String after);
 
-        default IterableConnection<Discussions.DiscussionCategory> discussionCategories() {
+        default Iterable<Discussions.DiscussionCategory> discussionCategories() {
             return new IterableConnection<Discussions.DiscussionCategory>(
                     (after) -> discussionCategories(100, after));
         }
@@ -44,7 +44,7 @@ public interface GithubAPI {
             })
             DiscussionConnection full(int first, @Nullable String after);
 
-            default IterableConnection<Discussions.Discussion> full(int pageSize) {
+            default Iterable<Discussions.Discussion> full(int pageSize) {
                 return new IterableConnection<Discussions.Discussion>((after) -> full(pageSize, after));
             }
 
@@ -53,7 +53,7 @@ public interface GithubAPI {
             @DefaultVariables(".nodes.labels.first: 100")
             DiscussionConnectionForBasicReport basicReport(int first, @Nullable String after);
 
-            default IterableConnection<Discussions.DiscussionForBasicReport> basicReport(int pageSize) {
+            default Iterable<Discussions.DiscussionForBasicReport> basicReport(int pageSize) {
                 return new IterableConnection<Discussions.DiscussionForBasicReport>(
                         (after) -> basicReport(pageSize, after));
             }
@@ -73,7 +73,7 @@ public interface GithubAPI {
             })
             IssueConnection full(int first, Issues.Since filterBy, @Nullable String after);
 
-            default IterableConnection<Issues.Issue> full(int pageSize, String since) {
+            default Iterable<Issues.Issue> full(int pageSize, String since) {
                 return new IterableConnection<Issues.Issue>(
                         (after) -> full(pageSize, new Issues.Since(since), after));
             }
@@ -83,7 +83,7 @@ public interface GithubAPI {
             @DefaultVariables(".nodes.labels.first: 100")
             IssueConnectionForBasicReport basicReport(int first, Issues.Since filterBy, @Nullable String after);
 
-            default IterableConnection<Issues.IssueForBasicReport> basicReport(int pageSize, String since) {
+            default Iterable<Issues.IssueForBasicReport> basicReport(int pageSize, String since) {
                 return new IterableConnection<Issues.IssueForBasicReport>(
                         (after) -> basicReport(pageSize, new Issues.Since(since), after));
             }

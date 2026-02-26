@@ -7,7 +7,6 @@ import java.util.concurrent.Callable;
 import jakarta.inject.Inject;
 
 import io.quarkiverse.github.api.Github;
-import io.quarkiverse.github.api.GithubConnection.IterableConnection;
 import io.quarkiverse.github.api.Labels.Label;
 import io.quarkiverse.github.index.GithubIndexService;
 import io.quarkiverse.github.index.RepositoryIndex;
@@ -33,7 +32,7 @@ public class IgnoreLabelCommand extends BaseCommand implements Callable<Integer>
     @Override
     public Integer call() throws Exception {
         RepositoryIndex repoIndex = index.createIfNotExists(repo.trim());
-        IterableConnection<Label> labels = github.repository(repo).labels();
+        Iterable<Label> labels = github.repository(repo).labels();
         Map<String, Label> labelMap = new HashMap<>();
         for (Label label : labels) {
             labelMap.put(label.name(), label);
