@@ -37,29 +37,19 @@ public class ReportBasicCommand extends BaseCommand implements Runnable {
     public void run() {
         try {
             RepositoryIndex repoIndex = index.createIfNotExists(repo.trim());
-            DateRange dateRange = DateRange.LAST_30_DAYS;
+            DateRange dateRange = DateRange.MONTH;
             if (quarter) {
-                dateRange = DateRange.LAST_90_DAYS;
+                dateRange = DateRange.QUARTER;
             } else if (year) {
                 dateRange = DateRange.YEAR;
             }
             BasicReport report = reportService.basicReport(repoIndex, dateRange);
-            output.info("Label counts");
-            for (LabelReport labelReport : report.labelCounts()) {
-                output.info("  " + labelReport.name() + ": " + labelReport.count());
-            }
-            output.info("--------------------------------");
             output.info("Total discussions: " + report.discussions().total());
-            output.info("Unlabeled discussions: " + report.discussions().unlabeled());
-            output.info("Label discussion counts");
-            for (LabelReport labelReport : report.discussions().labelCounts()) {
-                output.info("  " + labelReport.name() + ": " + labelReport.count());
-            }
-            output.info("--------------------------------");
             output.info("Total issues: " + report.issues().total());
+            output.info("Unlabeled discussions: " + report.discussions().unlabeled());
             output.info("Unlabeled issues: " + report.issues().unlabeled());
-            output.info("Label issue counts");
-            for (LabelReport labelReport : report.issues().labelCounts()) {
+            output.info("Label totals:");
+            for (LabelReport labelReport : report.labelCounts()) {
                 output.info("  " + labelReport.name() + ": " + labelReport.count());
             }
         } catch (Exception e) {

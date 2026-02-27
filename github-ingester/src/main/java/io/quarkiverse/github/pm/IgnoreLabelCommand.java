@@ -1,12 +1,10 @@
 package io.quarkiverse.github.pm;
 
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import jakarta.inject.Inject;
 
 import io.quarkiverse.github.api.Github;
-import io.quarkiverse.github.api.Labels.Label;
 import io.quarkiverse.github.index.GithubIndexService;
 import io.quarkiverse.github.index.RepositoryIndex;
 import io.quarkiverse.github.pm.util.BaseCommand;
@@ -25,22 +23,13 @@ public class IgnoreLabelCommand extends BaseCommand implements Callable<Integer>
     @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
 
-    @Parameters(index = "1", description = "Name of the label.  do 'ingester show labels' to get list of labels.")
-    private String label;
+    @Parameters(index = "1", description = "Regex pattern to ignore a label")
+    private String pattern;
 
     @Override
     public Integer call() throws Exception {
         RepositoryIndex repoIndex = index.createIfNotExists(repo.trim());
-        Map<String, Label> labelMap = github.repository(repo).labels();
-        if (!labelMap.containsKey(label)) {
-            output.error("Label [" + label + "] not found in " + repo);
-            output.info("Available labels: ");
-            for (Label label : labelMap.values()) {
-                output.thinking("[" + label.name() + "]: " + label.description());
-            }
-            return CommandLine.ExitCode.SOFTWARE;
-        }
-        repoIndex.ignoredLabels.add(label);
+        repoIndex.addIgnoredLabel(pattern);
         index.save(repoIndex);
         return CommandLine.ExitCode.OK;
     }

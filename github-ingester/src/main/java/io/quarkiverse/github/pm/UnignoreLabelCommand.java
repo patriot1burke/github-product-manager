@@ -19,8 +19,8 @@ public class UnignoreLabelCommand extends BaseCommand implements Callable<Intege
     @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
 
-    @Parameters(index = "1", description = "ID of the label.  do 'ingester show labels' to get the ID if you don't know it.")
-    private String label;
+    @Parameters(index = "1", description = "Regex pattern to ignore a label")
+    private String pattern;
 
     @Override
     public Integer call() throws Exception {
@@ -29,11 +29,11 @@ public class UnignoreLabelCommand extends BaseCommand implements Callable<Intege
             return CommandLine.ExitCode.SOFTWARE;
         }
         RepositoryIndex repoIndex = index.load(repo.trim());
-        if (!repoIndex.ignoredLabels.contains(label)) {
-            output.warn("Label [" + label + "] not found in ignore list for " + repo);
+        if (!repoIndex.ignoredLabels.contains(pattern)) {
+            output.warn("Label pattern [" + pattern + "] not found in ignore list for " + repo);
             return CommandLine.ExitCode.SOFTWARE;
         }
-        repoIndex.ignoredLabels.remove(label);
+        repoIndex.ignoredLabels.remove(pattern);
         index.save(repoIndex);
         return CommandLine.ExitCode.OK;
     }

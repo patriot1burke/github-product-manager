@@ -1,7 +1,8 @@
 package io.quarkiverse.github.index;
 
 import java.util.Collection;
-import java.util.Set;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
@@ -11,16 +12,30 @@ import io.quarkiverse.github.api.Labels.Label;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
 @RegisterAiService
+@ApplicationScoped
 public interface CalculateLabelsPrompt {
 
+        // NOTE: I could not use Set<String> even though OpenAI 5.2 returned a valid json array.  So instead I parse the String returned using Jackson directly.
+
     @SystemMessage("""
-                You are a helpful assistant that calculates what catagories a discussion should be labeled with.  You will be given a discussion and you will need to return a list of categories that the discussion should be labeled with.
-                Chose from this list of categories and their descriptions:
-                {#for label in labels}
-                - category: {label.name}
-                - description: {label.description}
-                {/for}
-            """)
+            Act as an expert discussion classifier. Your task is to analyze the provided discussion and assign it to the most relevant categories from the list below based on the provided descriptions.
+
+            ### Categories
+            {#each labels}
+            {it_index + 1}. **{it.name}**: {it.description}
+            {/each}
+
+            ### Instructions
+            - Read the discussion carefully.
+            - Compare the content against the category name and descriptions.
+            - Choose as many categories as are relevant.
+            - Output ONLY the category names.
+            - If no category fits, output an empty list.
+
+            ### Output Format
+            The output should be a json array of category names.  For example:
+            [ "category1", "category2", "category3" ]
+                        """)
     @UserMessage("""
             # Title: {discussion.title}
             ## Author: {discussion.author.login}
@@ -44,16 +59,27 @@ public interface CalculateLabelsPrompt {
             {/if}
             {/for}
             """)
-    Set<String> discussionLabels(Collection<Label> labels, Discussion discussion);
+    String labelDiscussion(Collection<Label> labels, Discussion discussion);
 
     @SystemMessage("""
-                You are a helpful assistant that calculates what catagories an issue should be labeled with.  You will be given an issue and you will need to return a list of categories that the issue should be labeled with.
-                Chose from this list of categories and their descriptions:
-                {#for label in labels}
-                - category: {label.name}
-                - description: {label.description}
-                {/for}
-            """)
+            Act as an expert issue classifier. Your task is to analyze the provided issue and assign it to the most relevant categories from the list below based on the provided descriptions.
+
+            ### Categories
+            {#each labels}
+            {it_index + 1}. **{it.name}**: {it.description}
+            {/each}
+
+            ### Instructions
+            - Read the issue carefully.
+            - Compare the content against the category name and descriptions.
+            - Choose as many categories as are relevant.
+            - Output ONLY the category names.
+            - If no category fits, output an empty list.\
+
+            ### Output Format
+            The output should be a json array of category names.  For example:
+            [ "category1", "category2", "category3" ]
+                        """)
     @UserMessage("""
             # Title: {issue.title}
             ## Author: {issue.author.login}
@@ -70,5 +96,5 @@ public interface CalculateLabelsPrompt {
             {comment.body}
             {/for}
             """)
-    Set<String> issueLabels(Collection<Label> labels, Issue issue);
+    String labelIssue(Collection<Label> labels, Issue issue);
 }

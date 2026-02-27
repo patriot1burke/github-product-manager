@@ -24,7 +24,7 @@ public class ShowIndexCommand extends BaseCommand implements Runnable {
             for (String name : repoIndex.ignoredCategories) {
                 output.info("   " + name);
             }
-            output.info("Ignored labels: ");
+            output.info("Ignored label patterns: ");
             for (String name : repoIndex.ignoredLabels) {
                 output.info("   " + name);
             }
