@@ -1,5 +1,7 @@
 package io.quarkiverse.github.pm;
 
+import java.util.Map;
+
 import jakarta.inject.Inject;
 
 import io.quarkiverse.github.api.Github;
@@ -19,8 +21,8 @@ public class ShowLabelsCommand extends BaseCommand implements Runnable {
     @Override
     public void run() {
         try {
-            Iterable<Label> labels = github.repository(repo).labels();
-            for (Label label : labels) {
+            Map<String, Label> labels = github.repository(repo).labels();
+            for (Label label : labels.values()) {
                 output.info("[" + label.name() + "]: " + label.description());
             }
         } catch (Exception e) {

@@ -1,6 +1,5 @@
 package io.quarkiverse.github.pm;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -32,11 +31,7 @@ public class IgnoreCategoryCommand extends BaseCommand implements Callable<Integ
     @Override
     public Integer call() {
         RepositoryIndex repoIndex = index.createIfNotExists(repo.trim());
-        Iterable<DiscussionCategory> discussionCategories = github.repository(repo).discussionCategories();
-        Map<String, DiscussionCategory> categories = new HashMap<>();
-        for (DiscussionCategory discussionCategory : discussionCategories) {
-            categories.put(discussionCategory.name(), discussionCategory);
-        }
+        Map<String, DiscussionCategory> categories = github.repository(repo).discussionCategories();
         if (!categories.containsKey(category)) {
             output.error("Category [" + category + "] not found in " + repo);
             output.info("Available categories: ");

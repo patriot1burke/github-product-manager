@@ -8,16 +8,19 @@ import jakarta.annotation.Nullable;
 public class Variables {
 
     public static String inputType(Parameter parameter) {
+        String inputType = null;
         InputType annotation = parameter.getAnnotation(InputType.class);
         if (annotation != null) {
-            return annotation.value();
+            inputType = annotation.value();
         }
-        Class<?> type = parameter.getType();
-        annotation = type.getAnnotation(InputType.class);
-        if (annotation != null) {
-            return annotation.value();
+        if (inputType == null) {
+            Class<?> type = parameter.getType();
+            annotation = type.getAnnotation(InputType.class);
+            if (annotation != null) {
+                return annotation.value();
+            }
         }
-        String inputType = inputType(type);
+        inputType = inputType(parameter.getType());
         if (parameter.isAnnotationPresent(Nullable.class)) {
             return inputType;
         }
@@ -25,6 +28,10 @@ public class Variables {
     }
 
     private static String inputType(Class<?> type) {
+        InputType annotation = type.getAnnotation(InputType.class);
+        if (annotation != null) {
+            return annotation.value();
+        }
         if (type == String.class) {
             return "String";
         }

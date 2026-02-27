@@ -1,5 +1,8 @@
 package io.quarkiverse.github.api;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import jakarta.annotation.Nullable;
 
 import io.quarkiverse.github.api.Discussions.DiscussionCategoryConnection;
@@ -22,16 +25,26 @@ public interface GithubAPI {
         @Query
         LabelConnection labels(int first, @Nullable String after);
 
-        default Iterable<Labels.Label> labels() {
-            return new IterableConnection<Labels.Label>((after) -> labels(100, after));
+        default Map<String, Labels.Label> labels() {
+            Iterable<Labels.Label> labelsIterable = new IterableConnection<Labels.Label>((after) -> labels(100, after));
+            Map<String, Labels.Label> labels = new HashMap<>();
+            for (Labels.Label label : labelsIterable) {
+                labels.put(label.name(), label);
+            }
+            return labels;
         }
 
         @Query
         DiscussionCategoryConnection discussionCategories(int first, @Nullable String after);
 
-        default Iterable<Discussions.DiscussionCategory> discussionCategories() {
-            return new IterableConnection<Discussions.DiscussionCategory>(
+        default Map<String, Discussions.DiscussionCategory> discussionCategories() {
+            Iterable<Discussions.DiscussionCategory> discussionCategoriesIterable = new IterableConnection<Discussions.DiscussionCategory>(
                     (after) -> discussionCategories(100, after));
+            Map<String, Discussions.DiscussionCategory> discussionCategories = new HashMap<>();
+            for (Discussions.DiscussionCategory discussionCategory : discussionCategoriesIterable) {
+                discussionCategories.put(discussionCategory.name(), discussionCategory);
+            }
+            return discussionCategories;
         }
 
         interface TailoredDiscussions {
@@ -68,14 +81,19 @@ public interface GithubAPI {
             @ArgsOnly
             @DefaultVariables({
                     ".nodes.labels.first: 100",
-                    ".nodes.comments.first: 20",
-                    ".nodes.comments.nodes.replies.first: 20"
+                    ".nodes.comments.first: 20"
             })
-            IssueConnection full(int first, Issues.Since filterBy, @Nullable String after);
+            IssueConnection full(int first, @Nullable Issues.Since filterBy, @Nullable String after);
 
             default Iterable<Issues.Issue> full(int pageSize, String since) {
+                Issues.Since filterBy = since != null ? new Issues.Since(since) : null;
                 return new IterableConnection<Issues.Issue>(
-                        (after) -> full(pageSize, new Issues.Since(since), after));
+                        (after) -> full(pageSize, filterBy, after));
+            }
+
+            default Iterable<Issues.Issue> full(int pageSize) {
+                return new IterableConnection<Issues.Issue>(
+                        (after) -> full(pageSize, null, after));
             }
 
             @Query
@@ -84,8 +102,9 @@ public interface GithubAPI {
             IssueConnectionForBasicReport basicReport(int first, Issues.Since filterBy, @Nullable String after);
 
             default Iterable<Issues.IssueForBasicReport> basicReport(int pageSize, String since) {
+                Issues.Since filterBy = since != null ? new Issues.Since(since) : null;
                 return new IterableConnection<Issues.IssueForBasicReport>(
-                        (after) -> basicReport(pageSize, new Issues.Since(since), after));
+                        (after) -> basicReport(pageSize, filterBy, after));
             }
         }
 

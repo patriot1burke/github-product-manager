@@ -1,6 +1,5 @@
 package io.quarkiverse.github.pm;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -32,11 +31,7 @@ public class IgnoreLabelCommand extends BaseCommand implements Callable<Integer>
     @Override
     public Integer call() throws Exception {
         RepositoryIndex repoIndex = index.createIfNotExists(repo.trim());
-        Iterable<Label> labels = github.repository(repo).labels();
-        Map<String, Label> labelMap = new HashMap<>();
-        for (Label label : labels) {
-            labelMap.put(label.name(), label);
-        }
+        Map<String, Label> labelMap = github.repository(repo).labels();
         if (!labelMap.containsKey(label)) {
             output.error("Label [" + label + "] not found in " + repo);
             output.info("Available labels: ");

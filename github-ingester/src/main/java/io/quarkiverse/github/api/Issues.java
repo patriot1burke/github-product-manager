@@ -2,7 +2,6 @@ package io.quarkiverse.github.api;
 
 import java.util.List;
 
-import io.quarkiverse.github.api.Comments.CommentConnection;
 import io.quarkiverse.github.api.Labels.LabelConnectionNameOnly;
 import io.quarkiverse.graphql.client.InputType;
 
@@ -14,13 +13,21 @@ public interface Issues {
     record IssueTypeNameOnly(String name) {
     }
 
-    @InputType("IssueFilters!")
+    public record IssueComment(Actor author, String body) {
+
+    }
+
+    public record IssueCommentConnection(PageInfo pageInfo,
+            List<IssueComment> nodes) implements GithubConnection<IssueComment> {
+    }
+
+    @InputType("IssueFilters")
     record Since(String since) {
 
     }
 
     record Issue(int number, String title, Actor author, IssueTypeNameOnly issueType, String body, String createdAt,
-            String updatedAt, LabelConnectionNameOnly labels, CommentConnection comments) {
+            String updatedAt, LabelConnectionNameOnly labels, IssueCommentConnection comments) {
 
     }
 

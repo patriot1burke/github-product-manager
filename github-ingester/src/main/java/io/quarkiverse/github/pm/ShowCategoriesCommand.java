@@ -1,5 +1,7 @@
 package io.quarkiverse.github.pm;
 
+import java.util.Map;
+
 import jakarta.inject.Inject;
 
 import io.quarkiverse.github.api.Discussions.DiscussionCategory;
@@ -19,8 +21,8 @@ public class ShowCategoriesCommand extends BaseCommand implements Runnable {
     @Override
     public void run() {
         try {
-            Iterable<DiscussionCategory> categories = github.repository(repo).discussionCategories();
-            for (DiscussionCategory discussionCategory : categories) {
+            Map<String, DiscussionCategory> categories = github.repository(repo).discussionCategories();
+            for (DiscussionCategory discussionCategory : categories.values()) {
                 output.info("[" + discussionCategory.name() + "]: " + discussionCategory.description());
             }
         } catch (Exception e) {
