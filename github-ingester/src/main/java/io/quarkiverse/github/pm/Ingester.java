@@ -15,6 +15,7 @@ import picocli.CommandLine.Command;
         IgnoreCommand.class,
         UnignoreCommand.class,
         PullCommand.class,
+        CleanCommand.class,
         ShowCommand.class,
         ReportCommand.class }, description = "Tool for pulling Github issues, discussions, summarizing, and ingesting into a vector database")
 public class Ingester extends BaseCommand implements Callable<Integer> {

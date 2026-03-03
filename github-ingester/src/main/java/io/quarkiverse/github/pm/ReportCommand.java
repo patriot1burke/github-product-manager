@@ -7,7 +7,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "report", description = "Various reports on Github data.", subcommands = {
-        ReportBasicCommand.class })
+        ReportBasicCommand.class, ReportLabelsCommand.class })
 public class ReportCommand extends BaseCommand implements Callable<Integer> {
 
     @Override

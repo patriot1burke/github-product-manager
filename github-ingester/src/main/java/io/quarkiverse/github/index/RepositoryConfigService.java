@@ -11,41 +11,37 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkiverse.github.api.Github;
 import io.quarkiverse.github.pm.util.AppLogger;
 
 @ApplicationScoped
-public class GithubIndexService {
-    static AppLogger log = AppLogger.getLogger(GithubIndexService.class);
+public class RepositoryConfigService {
+    static AppLogger log = AppLogger.getLogger(RepositoryConfigService.class);
 
     @ConfigProperty(name = "product.manager.cache.dir")
     String baseDirectory;
-
-    @Inject
-    Github github;
 
     @Inject
     ObjectMapper objectMapper;
 
     public boolean exists(String repoName) {
         Path path = Path.of(baseDirectory, repoName);
-        Path indexPath = path.resolve("index.json");
+        Path indexPath = path.resolve("config.json");
         return Files.exists(indexPath);
     }
 
-    public RepositoryIndex load(String repoName) {
+    public RepositoryConfig load(String repoName) {
         Path path = Path.of(baseDirectory, repoName);
-        Path indexPath = path.resolve("index.json");
+        Path indexPath = path.resolve("config.json");
         try {
 
-            RepositoryIndex repo = objectMapper.readValue(indexPath.toFile(), RepositoryIndex.class);
+            RepositoryConfig repo = objectMapper.readValue(indexPath.toFile(), RepositoryConfig.class);
             return repo;
         } catch (Exception e) {
             throw new RuntimeException("Failed to load repo", e);
         }
     }
 
-    public RepositoryIndex createIfNotExists(String repoName) {
+    public RepositoryConfig createIfNotExists(String repoName) {
         String[] spit = repoName.split("/");
         if (spit.length != 2) {
             throw new RuntimeException("Invalid repo name: " + repoName);
@@ -63,17 +59,18 @@ public class GithubIndexService {
                 throw new RuntimeException("Failed to create directory", e);
             }
         }
-        RepositoryIndex repo = new RepositoryIndex();
+        RepositoryConfig repo = new RepositoryConfig();
         repo.repo = repoName;
         return repo;
     }
 
-    public void save(RepositoryIndex repo) {
+    public void save(RepositoryConfig repo) {
         try {
-            Path indexFile = Path.of(baseDirectory, repo.repo, "index.json");
+            Path indexFile = Path.of(baseDirectory, repo.repo, "config.json");
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(indexFile.toFile(), repo);
         } catch (Exception e) {
             throw new RuntimeException("Failed to save repo", e);
         }
     }
+
 }

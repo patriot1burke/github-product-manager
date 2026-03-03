@@ -8,14 +8,14 @@ import io.quarkiverse.github.api.Github;
 import io.quarkiverse.github.api.Labels.Label;
 import io.quarkiverse.github.pm.util.BaseCommand;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Parameters;
+import picocli.CommandLine.Option;
 
 @Command(name = "labels", description = "Show labels for a given Github repo")
 public class ShowLabelsCommand extends BaseCommand implements Runnable {
     @Inject
     Github github;
 
-    @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus", arity = "1")
+    @Option(names = "--repo", required = true, description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
 
     @Override

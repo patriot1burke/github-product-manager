@@ -7,7 +7,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "show", description = "Show various info about Github projects and ingester.", subcommands = {
-        ShowCategoriesCommand.class, ShowLabelsCommand.class, ShowIndexCommand.class })
+        ShowCategoriesCommand.class, ShowLabelsCommand.class, ShowConfigCommand.class })
 public class ShowCommand extends BaseCommand implements Callable<Integer> {
 
     @Override

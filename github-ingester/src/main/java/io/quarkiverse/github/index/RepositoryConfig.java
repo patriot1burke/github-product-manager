@@ -8,11 +8,10 @@ import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class RepositoryIndex {
+public class RepositoryConfig {
     public String repo;
     public Set<String> ignoredCategories = new HashSet<>();
     public Set<String> ignoredLabels = new HashSet<>();
-    public long lastPulled = 0;
 
     @JsonIgnore
     private List<Pattern> ignoredLabelsPatterns = null;

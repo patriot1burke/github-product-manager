@@ -2,39 +2,41 @@ package io.quarkiverse.github.pm;
 
 import jakarta.inject.Inject;
 
-import io.quarkiverse.github.api.Discussions.DiscussionConnectionForBasicReport;
-import io.quarkiverse.github.api.Discussions.DiscussionForBasicReport;
-import io.quarkiverse.github.api.Github;
-import io.quarkiverse.github.index.GithubIndexService;
+import io.quarkiverse.github.index.PruneService;
+import io.quarkiverse.github.index.PullCacheService;
+import io.quarkiverse.github.index.ReportService.DateRange;
 import io.quarkiverse.github.pm.util.AppLogger;
 import io.quarkiverse.github.pm.util.BaseCommand;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Parameters;
+import picocli.CommandLine.Option;
 
 @Command(name = "pull", description = "Pull issues from Github")
 public class PullCommand extends BaseCommand implements Runnable {
-    @Inject
-    GithubIndexService discussions;
-
-    @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
+    @Option(names = "--repo", required = true, description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
 
+    @Option(names = "--since", required = false, description = "Pull discussions and issues since month, quarter, or year")
+    private DateRange since = null;
+
+    @Option(names = "--prune", required = false, description = "Prune discussions and issues older than the given date range")
+    private boolean prune = false;
+
     @Inject
-    Github github;
+    PruneService pruneService;
+
+    @Inject
+    PullCacheService pullCacheService;
 
     static AppLogger log = AppLogger.getLogger(PullCommand.class);
 
     @Override
     public void run() {
-        //issues.pullRepo(repo.trim());
         try {
-            DiscussionConnectionForBasicReport basicReport = github.repository(repo.trim()).discussions().basicReport(100,
-                    null);
-            for (DiscussionForBasicReport discussion : basicReport.nodes()) {
-                log.thinking("Discussion: " + discussion.category().name());
+            pullCacheService.pull(repo, since);
+            if (prune) {
+                pruneService.prune(repo, since);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             log.error("Error pulling discussions", e);
         }
 

@@ -1,8 +1,10 @@
 package io.quarkiverse.github.index;
 
 import java.util.Collection;
+import java.util.Set;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.control.ActivateRequestContext;
 
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
@@ -12,10 +14,10 @@ import io.quarkiverse.github.api.Labels.Label;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
 @RegisterAiService
-@ApplicationScoped
-public interface CalculateLabelsPrompt {
-
-        // NOTE: I could not use Set<String> even though OpenAI 5.2 returned a valid json array.  So instead I parse the String returned using Jackson directly.
+@RequestScoped
+@ActivateRequestContext
+public interface DetermineLabelsPrompt {
+    // NOTE: To get this to work with Set<String> and OpenAI 5.2, I had to tell the LLM to output categories delimited by a new line.
 
     @SystemMessage("""
             Act as an expert discussion classifier. Your task is to analyze the provided discussion and assign it to the most relevant categories from the list below based on the provided descriptions.
@@ -33,14 +35,16 @@ public interface CalculateLabelsPrompt {
             - If no category fits, output an empty list.
 
             ### Output Format
-            The output should be a json array of category names.  For example:
-            [ "category1", "category2", "category3" ]
+            The output should be just the category names delimited by a new line For example:
+            category1
+            category2
+            category3
                         """)
     @UserMessage("""
             # Title: {discussion.title}
             ## Author: {discussion.author.login}
-            ## Created At: {discussion.createdAt}
-            ## Updated At: {discussion.updatedAt}
+
+            # Topic:
 
             {discussion.body}
 
@@ -59,7 +63,7 @@ public interface CalculateLabelsPrompt {
             {/if}
             {/for}
             """)
-    String labelDiscussion(Collection<Label> labels, Discussion discussion);
+    Set<String> labelDiscussion(Collection<Label> labels, Discussion discussion);
 
     @SystemMessage("""
             Act as an expert issue classifier. Your task is to analyze the provided issue and assign it to the most relevant categories from the list below based on the provided descriptions.
@@ -77,14 +81,16 @@ public interface CalculateLabelsPrompt {
             - If no category fits, output an empty list.\
 
             ### Output Format
-            The output should be a json array of category names.  For example:
-            [ "category1", "category2", "category3" ]
+            The output should be just the category names delimited by a new line For example:
+            category1
+            category2
+            category3
                         """)
     @UserMessage("""
             # Title: {issue.title}
             ## Author: {issue.author.login}
-            ## Created At: {issue.createdAt}
-            ## Updated At: {issue.updatedAt}
+
+            # Issue:
 
             {issue.body}
 
@@ -96,5 +102,5 @@ public interface CalculateLabelsPrompt {
             {comment.body}
             {/for}
             """)
-    String labelIssue(Collection<Label> labels, Issue issue);
+    Set<String> labelIssue(Collection<Label> labels, Issue issue);
 }

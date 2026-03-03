@@ -2,16 +2,13 @@ package io.quarkiverse.github.pm;
 
 import jakarta.inject.Inject;
 
-import io.quarkiverse.github.index.GithubIndexService;
 import io.quarkiverse.github.index.ReportService;
 import io.quarkiverse.github.index.ReportService.BasicReport;
-import io.quarkiverse.github.index.ReportService.DateRange;
 import io.quarkiverse.github.index.ReportService.LabelReport;
-import io.quarkiverse.github.index.RepositoryIndex;
+import io.quarkiverse.github.index.RepositoryConfigService;
 import io.quarkiverse.github.pm.util.BaseCommand;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
 
 @Command(name = "basic", description = "Basic report on Github data")
 public class ReportBasicCommand extends BaseCommand implements Runnable {
@@ -19,35 +16,19 @@ public class ReportBasicCommand extends BaseCommand implements Runnable {
     ReportService reportService;
 
     @Inject
-    GithubIndexService index;
+    RepositoryConfigService index;
 
-    @Parameters(index = "0", description = "Github repo.  i.e. quarkusio/quarkus")
+    @Option(names = "--repo", required = true, description = "Github repo.  i.e. quarkusio/quarkus")
     private String repo;
-
-    @Option(names = "--month", required = false, description = "Report on the last 30 days")
-    private boolean month = false;
-
-    @Option(names = "--quarter", required = false, description = "Report on the 90 days")
-    private boolean quarter = false;
-
-    @Option(names = "--year", required = false, description = "Report on the last year")
-    private boolean year = false;
 
     @Override
     public void run() {
         try {
-            RepositoryIndex repoIndex = index.createIfNotExists(repo.trim());
-            DateRange dateRange = DateRange.MONTH;
-            if (quarter) {
-                dateRange = DateRange.QUARTER;
-            } else if (year) {
-                dateRange = DateRange.YEAR;
-            }
-            BasicReport report = reportService.basicReport(repoIndex, dateRange);
+            BasicReport report = reportService.basicReport(repo);
+            output.info("Start date: " + report.startDate());
+            output.info("End date: " + report.endDate());
             output.info("Total discussions: " + report.discussions().total());
             output.info("Total issues: " + report.issues().total());
-            output.info("Unlabeled discussions: " + report.discussions().unlabeled());
-            output.info("Unlabeled issues: " + report.issues().unlabeled());
             output.info("Label totals:");
             for (LabelReport labelReport : report.labelCounts()) {
                 output.info("  " + labelReport.name() + ": " + labelReport.count());
