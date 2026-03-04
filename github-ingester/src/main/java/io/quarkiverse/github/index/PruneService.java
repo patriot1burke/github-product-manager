@@ -14,14 +14,19 @@ public class PruneService {
     @Inject
     SummaryService summaryService;
 
+    @Inject
+    RagIndexer ragIndexer;
+
     public void prune(String repoName, DateRange dateRange) {
         ChangeSet changeSet = pullCacheService.prune(repoName, dateRange);
         summaryService.prune(repoName, changeSet);
+        ragIndexer.prune(repoName, changeSet);
     }
 
     public void clear(String repoName) {
         pullCacheService.clear(repoName);
         summaryService.clear(repoName);
+        ragIndexer.clear(repoName);
     }
 
 }

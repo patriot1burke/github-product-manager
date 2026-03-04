@@ -2,10 +2,10 @@ package io.quarkiverse.github.pm;
 
 import java.util.concurrent.Callable;
 
-import io.quarkiverse.github.pm.util.AppLogger;
-import io.quarkiverse.github.pm.util.AppLoggerFactory;
 import io.quarkiverse.github.pm.util.BaseCommand;
 import io.quarkiverse.github.pm.util.OutputMixin;
+import io.quarkiverse.github.util.AppLogger;
+import io.quarkiverse.github.util.AppLoggerFactory;
 import io.quarkus.picocli.runtime.annotations.TopCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;

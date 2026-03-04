@@ -11,7 +11,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkiverse.github.pm.util.AppLogger;
+import io.quarkiverse.github.util.AppLogger;
 
 @ApplicationScoped
 public class RepositoryConfigService {

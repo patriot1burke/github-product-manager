@@ -8,16 +8,13 @@
     <version>999-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
-  <artifactId>github-ingester-cli</artifactId>
-  <name>Github Ingester CLI</name>
+  <groupId>io.quarkiverse.graphql</groupId>
+  <artifactId>graphql-client</artifactId>
+  <name>GraphQL Client</name>
   <dependencies>
     <dependency>
-      <groupId>io.quarkiverse.github.pm</groupId>
-      <artifactId>github-ingester</artifactId>
-    </dependency>
-    <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-picocli</artifactId>
+      <artifactId>quarkus-rest-client-jackson</artifactId>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -39,19 +36,6 @@
           <source>${maven.compiler.source}</source>
           <target>${maven.compiler.target}</target>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>build</goal>
-              <goal>generate-code</goal>
-              <goal>generate-code-tests</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

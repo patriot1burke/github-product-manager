@@ -21,7 +21,7 @@ import io.quarkiverse.github.api.GithubAPI.Repository;
 import io.quarkiverse.github.api.Labels.Label;
 import io.quarkiverse.github.index.model.DiscussionModel;
 import io.quarkiverse.github.index.model.IssueModel;
-import io.quarkiverse.github.pm.util.AppLogger;
+import io.quarkiverse.github.util.AppLogger;
 
 @ApplicationScoped
 public class ReportService {

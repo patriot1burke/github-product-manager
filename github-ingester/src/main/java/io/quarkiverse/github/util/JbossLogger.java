@@ -1,4 +1,4 @@
-package io.quarkiverse.github.pm.util;
+package io.quarkiverse.github.util;
 
 import org.jboss.logging.Logger;
 

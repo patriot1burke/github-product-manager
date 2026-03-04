@@ -1,4 +1,4 @@
-package io.quarkiverse.github.pm.util;
+package io.quarkiverse.github.util;
 
 public interface AppLogger {
     public final class Factory {

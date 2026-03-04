@@ -8,13 +8,15 @@
         <artifactId>quarkiverse-parent</artifactId>
         <version>20</version>
     </parent>
-    <groupId>io.quarkiverse</groupId>
+    <groupId>io.quarkiverse.github.pm</groupId>
     <artifactId>github-product-manager-parent</artifactId>
     <version>999-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Github Product Manager - Parent</name>
     <modules>
+        <module>graphql-client</module>
         <module>github-ingester</module>
+        <module>cli</module>
     </modules>
     <scm>
         <connection>scm:git:git@github.com:patriot1burke/github-product-manager.git</connection>
@@ -46,8 +48,13 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>io.quarkiverse</groupId>
+                <groupId>io.quarkiverse.github.pm</groupId>
                 <artifactId>github-ingester</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkiverse.graphql</groupId>
+                <artifactId>graphql-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -122,7 +129,7 @@
                 <plugin>
                     <groupId>io.smallrye</groupId>
                     <artifactId>jandex-maven-plugin</artifactId>
-                    <version>3.5.0</version>
+                    <version>3.5.3</version>
                 </plugin>
             </plugins>
         </pluginManagement>

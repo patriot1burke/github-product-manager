@@ -5,8 +5,8 @@ import jakarta.inject.Inject;
 import io.quarkiverse.github.index.PruneService;
 import io.quarkiverse.github.index.PullCacheService;
 import io.quarkiverse.github.index.ReportService.DateRange;
-import io.quarkiverse.github.pm.util.AppLogger;
 import io.quarkiverse.github.pm.util.BaseCommand;
+import io.quarkiverse.github.util.AppLogger;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 

@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkiverse.github.index.PullCacheService.ChangeSet;
 import io.quarkiverse.github.index.model.DiscussionModel;
 import io.quarkiverse.github.index.model.IssueModel;
-import io.quarkiverse.github.pm.util.AppLogger;
+import io.quarkiverse.github.util.AppLogger;
 
 @ApplicationScoped
 public class SummaryService {

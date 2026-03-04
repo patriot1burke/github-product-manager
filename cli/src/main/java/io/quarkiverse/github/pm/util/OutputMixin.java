@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.text.MessageFormat;
 
 import io.quarkiverse.github.pm.Ingester;
+import io.quarkiverse.github.util.AppLogger;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.ColorScheme;
 import picocli.CommandLine.Model.CommandSpec;

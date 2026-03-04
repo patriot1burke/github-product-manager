@@ -18,12 +18,13 @@ import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response;
 
+import org.jboss.logging.Logger;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkus.logging.Log;
-
 public class GraphQLClient {
+    static final Logger LOG = Logger.getLogger(GraphQLClient.class);
     private ObjectMapper objectMapper;
     private Client client;
 
@@ -173,7 +174,7 @@ public class GraphQLClient {
                     }
 
                     String body = post.readEntity(String.class);
-                    Log.debugv("Response body: {0}", body);
+                    LOG.debugv("Response body: {0}", body);
 
                     JsonNode json = objectMapper.readTree(body);
                     if (json.get("errors") != null) {
@@ -188,8 +189,8 @@ public class GraphQLClient {
                     }
                     return objectMapper.treeToValue(data, objectMapper.constructType(returnType));
                 } catch (Exception e) {
-                    Log.error("Failed to execute query: ");
-                    Log.error(query);
+                    LOG.error("Failed to execute query: ");
+                    LOG.error(query);
                     throw new RuntimeException("Failed to execute query: ", e);
                 }
             }
