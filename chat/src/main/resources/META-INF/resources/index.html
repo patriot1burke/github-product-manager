@@ -223,22 +223,39 @@
         .data-message {
             margin-right: auto;
             color: #e8e8e8;
-            padding: 0 0 0 15px;
-            border-left: 3px solid #BCAE79;
+            background-color: #2d3238;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            padding: 12px 15px;
             max-width: 90%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        .data-message ol {
+        .thinking-message {
+            margin-right: auto;
+            color: rgba(232, 232, 232, 0.5);
+            background-color: #2d3238;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            padding: 12px 15px;
+            max-width: 90%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .data-message ol,
+        .thinking-message ol {
             margin-left: 20px;
 
         }
 
-        .data-message ul {
+        .data-message ul,
+        .thinking-message ul {
             margin-left: 20px;
 
         }
 
-        .data-message ul.icon-list {
+        .data-message ul.icon-list,
+        .thinking-message ul.icon-list {
             list-style: none;
         }
 
@@ -661,7 +678,7 @@
             function thinking(data) {
                 let $messageDiv = thinkingDiv;
                 if ($messageDiv == null) {
-                    $messageDiv = $('<div>', { class: 'message data-message' });
+                    $messageDiv = $('<div>', { class: 'message thinking-message' });
                     thinkingDiv = $messageDiv;
                     $chatContainer.append($messageDiv);
                 } else {
