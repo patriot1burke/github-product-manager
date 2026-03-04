@@ -1,13 +1,13 @@
 package io.quarkiverse.github.pm;
 
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkus.websockets.next.WebSocketConnection;
 
-@SessionScoped
+@RequestScoped
 public class ChatContext {
 
     @Inject
@@ -15,6 +15,16 @@ public class ChatContext {
 
     @Inject
     ObjectMapper objectMapper;
+
+    String userMessage;
+
+    public String userMessage() {
+        return userMessage;
+    }
+
+    public void userMessage(String message) {
+        this.userMessage = message;
+    }
 
     public void thinking(String message) {
         message(new ChatEvent("thinking", message));
