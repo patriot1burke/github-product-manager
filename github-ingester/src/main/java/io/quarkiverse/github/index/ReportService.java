@@ -1,7 +1,6 @@
 package io.quarkiverse.github.index;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -39,36 +38,6 @@ public class ReportService {
 
     public static record BasicReport(String startDate, String endDate, List<LabelReport> labelCounts, Tally discussions,
             Tally issues) {
-    }
-
-    public enum DateRange {
-
-        month(30),
-        quarter(90),
-        year(365)
-
-        ;
-
-        int days;
-
-        DateRange(int days) {
-            this.days = days;
-        }
-
-        public Instant fromInstant() {
-            return Instant.now().minus(days, ChronoUnit.DAYS);
-        }
-
-        public long fromToday() {
-            Instant today = Instant.now();
-            return today.minus(days, ChronoUnit.DAYS).toEpochMilli();
-        }
-
-        public String fromString() {
-            Instant today = Instant.now();
-            return today.minus(days, ChronoUnit.DAYS).toString();
-        }
-
     }
 
     private Map<String, Label> getLabels(Repository repository, RepositoryConfig repoIndex) {

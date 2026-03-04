@@ -4,7 +4,7 @@ import jakarta.inject.Inject;
 
 import io.quarkiverse.github.index.PruneService;
 import io.quarkiverse.github.index.PullCacheService;
-import io.quarkiverse.github.index.ReportService.DateRange;
+import io.quarkiverse.github.index.model.Earlier;
 import io.quarkiverse.github.pm.util.BaseCommand;
 import io.quarkiverse.github.util.AppLogger;
 import picocli.CommandLine.Command;
@@ -16,7 +16,7 @@ public class PullCommand extends BaseCommand implements Runnable {
     private String repo;
 
     @Option(names = "--since", required = false, description = "Pull discussions and issues since month, quarter, or year")
-    private DateRange since = null;
+    private Earlier since = null;
 
     @Option(names = "--prune", required = false, description = "Prune discussions and issues older than the given date range")
     private boolean prune = false;

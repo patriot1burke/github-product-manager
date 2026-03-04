@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,11 +26,13 @@ import io.quarkiverse.github.api.GithubAPI.Repository;
 import io.quarkiverse.github.api.Issues.Issue;
 import io.quarkiverse.github.api.Labels.Label;
 import io.quarkiverse.github.api.Labels.LabelNameOnly;
-import io.quarkiverse.github.index.ReportService.DateRange;
+import io.quarkiverse.github.index.model.ChangeSet;
 import io.quarkiverse.github.index.model.CommentModel;
 import io.quarkiverse.github.index.model.DiscussionCommentModel;
 import io.quarkiverse.github.index.model.DiscussionModel;
+import io.quarkiverse.github.index.model.Earlier;
 import io.quarkiverse.github.index.model.IssueModel;
+import io.quarkiverse.github.index.model.RecordSet;
 import io.quarkiverse.github.util.AppLogger;
 
 @ApplicationScoped
@@ -60,6 +63,30 @@ public class PullCacheService {
         }
     }
 
+    public PullCache load(String repoName) {
+        PullCache pullCache = pullCacheMap.get(repoName);
+        if (pullCache != null) {
+            return pullCache;
+        }
+        Path indexPath = pullIndexPath(repoName);
+        if (pullIndexExists(repoName)) {
+            try {
+                pullCache = objectMapper.readValue(indexPath.toFile(), PullCache.class);
+            } catch (IOException e) {
+                log.warnv("Failed to load pull index for repo {0}: {1}", repoName, e.getMessage());
+                try {
+                    Files.delete(indexPath);
+                } catch (IOException e2) {
+                }
+            }
+        }
+        if (pullCache == null) {
+            pullCache = new PullCache();
+        }
+        pullCacheMap.put(repoName, pullCache);
+        return pullCache;
+    }
+
     private void save(String repoName) {
         PullCache pullCache = pullCacheMap.get(repoName);
         if (pullCache == null) {
@@ -78,9 +105,6 @@ public class PullCacheService {
             } catch (IOException e2) {
             }
         }
-    }
-
-    public record ChangeSet(Set<Integer> discussions, Set<Integer> issues) {
     }
 
     public void clear(String repoName) {
@@ -113,7 +137,7 @@ public class PullCacheService {
         return path.resolve("pull.json");
     }
 
-    public ChangeSet pull(String repoName, DateRange range) {
+    public ChangeSet pull(String repoName, Earlier range) {
         try {
             Repository repository = github.repository(repoName);
             RepositoryConfig config = githubIndex.load(repoName);
@@ -121,10 +145,10 @@ public class PullCacheService {
             PullCache pullCache = load(repoName);
 
             if (range == null) {
-                range = DateRange.month;
+                range = Earlier.month;
             }
 
-            long rangeSince = range.fromToday();
+            long rangeSince = range.fromMillis();
             long since = pullCache.lastPulled > rangeSince ? pullCache.lastPulled : rangeSince;
             pullCache.lastPulled = System.currentTimeMillis();
             log.thinking("Pulling since: " + Instant.ofEpochMilli(since).toString());
@@ -207,35 +231,11 @@ public class PullCacheService {
         return Files.exists(indexPath);
     }
 
-    public PullCache load(String repoName) {
-        PullCache pullCache = pullCacheMap.get(repoName);
-        if (pullCache != null) {
-            return pullCache;
-        }
-        Path indexPath = pullIndexPath(repoName);
-        if (pullIndexExists(repoName)) {
-            try {
-                pullCache = objectMapper.readValue(indexPath.toFile(), PullCache.class);
-            } catch (IOException e) {
-                log.warnv("Failed to load pull index for repo {0}: {1}", repoName, e.getMessage());
-                try {
-                    Files.delete(indexPath);
-                } catch (IOException e2) {
-                }
-            }
-        }
-        if (pullCache == null) {
-            pullCache = new PullCache();
-        }
-        pullCacheMap.put(repoName, pullCache);
-        return pullCache;
-    }
-
-    public ChangeSet prune(String repoName, DateRange since) {
+    public ChangeSet prune(String repoName, Earlier since) {
         PullCache pullCache = load(repoName);
         Set<Integer> discussions = new HashSet<>();
         Set<Integer> issues = new HashSet<>();
-        long sinceMillis = since.fromToday();
+        long sinceMillis = since.fromMillis();
         for (DiscussionModel discussion : pullCache.discussions.values()) {
             if (discussion.updatedAt() < sinceMillis) {
                 discussions.add(discussion.number());
@@ -256,5 +256,22 @@ public class PullCacheService {
             pullCache.issues.remove(issue);
         }
         return new ChangeSet(discussions, issues);
+    }
+
+    public RecordSet findByLabel(String repoName, Set<String> labels) {
+        PullCache pullCache = load(repoName);
+        List<DiscussionModel> discussions = new ArrayList<>();
+        List<IssueModel> issues = new ArrayList<>();
+        for (DiscussionModel discussion : pullCache.discussions.values()) {
+            if (discussion.labels().containsAll(labels)) {
+                discussions.add(discussion);
+            }
+        }
+        for (IssueModel issue : pullCache.issues.values()) {
+            if (issue.labels().containsAll(labels)) {
+                issues.add(issue);
+            }
+        }
+        return new RecordSet(discussions, issues);
     }
 }

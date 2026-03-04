@@ -22,7 +22,7 @@ import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.filter.Filter;
 import dev.langchain4j.store.embedding.filter.MetadataFilterBuilder;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
-import io.quarkiverse.github.index.PullCacheService.ChangeSet;
+import io.quarkiverse.github.index.model.ChangeSet;
 import io.quarkiverse.github.index.model.DiscussionModel;
 import io.quarkiverse.github.index.model.IssueModel;
 import io.quarkiverse.github.util.AppLogger;

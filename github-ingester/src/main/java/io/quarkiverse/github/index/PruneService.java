@@ -3,8 +3,8 @@ package io.quarkiverse.github.index;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.quarkiverse.github.index.PullCacheService.ChangeSet;
-import io.quarkiverse.github.index.ReportService.DateRange;
+import io.quarkiverse.github.index.model.ChangeSet;
+import io.quarkiverse.github.index.model.Earlier;
 
 @ApplicationScoped
 public class PruneService {
@@ -17,7 +17,7 @@ public class PruneService {
     @Inject
     RagIndexer ragIndexer;
 
-    public void prune(String repoName, DateRange dateRange) {
+    public void prune(String repoName, Earlier dateRange) {
         ChangeSet changeSet = pullCacheService.prune(repoName, dateRange);
         summaryService.prune(repoName, changeSet);
         ragIndexer.prune(repoName, changeSet);

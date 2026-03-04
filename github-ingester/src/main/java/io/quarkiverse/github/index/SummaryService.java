@@ -15,7 +15,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkiverse.github.index.PullCacheService.ChangeSet;
+import io.quarkiverse.github.index.model.ChangeSet;
 import io.quarkiverse.github.index.model.DiscussionModel;
 import io.quarkiverse.github.index.model.IssueModel;
 import io.quarkiverse.github.util.AppLogger;
