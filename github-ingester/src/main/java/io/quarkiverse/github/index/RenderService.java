@@ -1,7 +1,11 @@
 package io.quarkiverse.github.index;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 
+import dev.langchain4j.model.TokenCountEstimator;
+import dev.langchain4j.model.openai.OpenAiChatModelName;
+import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import io.quarkiverse.github.index.model.DiscussionModel;
 import io.quarkiverse.github.index.model.IssueModel;
 import io.quarkus.qute.CheckedTemplate;
@@ -61,5 +65,11 @@ public class RenderService {
 
     public String issue(IssueModel issue) {
         return Templates.issue(issue).render();
+    }
+
+    @Produces
+    public TokenCountEstimator tokenCountEstimator() {
+        OpenAiTokenCountEstimator estimator = new OpenAiTokenCountEstimator(OpenAiChatModelName.GPT_5_1);
+        return estimator;
     }
 }

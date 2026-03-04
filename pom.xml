@@ -17,6 +17,7 @@
         <module>graphql-client</module>
         <module>github-ingester</module>
         <module>cli</module>
+        <module>chat</module>
     </modules>
     <scm>
         <connection>scm:git:git@github.com:patriot1burke/github-product-manager.git</connection>
@@ -96,11 +97,6 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>33.4.8-jre</version>
-            </dependency>
-            <dependency>
-                <groupId>org.lz4</groupId>
-                <artifactId>lz4-java</artifactId>
-                <version>1.8.0</version>
             </dependency>
             <dependency>
                 <groupId>org.webjars</groupId>
