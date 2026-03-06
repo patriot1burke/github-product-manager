@@ -3,8 +3,8 @@ package io.quarkiverse.github.index;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -14,10 +14,13 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import dev.langchain4j.model.TokenCountEstimator;
 import io.quarkiverse.github.index.model.ChangeSet;
 import io.quarkiverse.github.index.model.DiscussionModel;
 import io.quarkiverse.github.index.model.IssueModel;
+import io.quarkiverse.github.index.model.RenderResult;
 import io.quarkiverse.github.util.AppLogger;
 
 @ApplicationScoped
@@ -40,14 +43,18 @@ public class SummaryService {
     ObjectMapper objectMapper;
 
     static class SummaryCache {
-        public Map<Integer, String> discussions = new HashMap<>();
-        public Map<Integer, String> issues = new HashMap<>();
+
+        @JsonDeserialize(as = ConcurrentHashMap.class)
+        public Map<Integer, RenderResult> discussions = new ConcurrentHashMap<>();
+
+        @JsonDeserialize(as = ConcurrentHashMap.class)
+        public Map<Integer, RenderResult> issues = new ConcurrentHashMap<>();
 
         @JsonIgnore
         boolean dirty = false;
     }
 
-    private Map<String, SummaryCache> summaryCacheMap = new HashMap<>();
+    private Map<String, SummaryCache> summaryCacheMap = new ConcurrentHashMap<>();
 
     @PreDestroy
     public void preDestroy() {
@@ -114,42 +121,48 @@ public class SummaryService {
         }
     }
 
-    public String summarize(String repoName, DiscussionModel discussion) {
+    @Inject
+    TokenCountEstimator estimator;
+
+    public RenderResult summarize(String repoName, DiscussionModel discussion) {
         SummaryCache summaryCache = load(repoName);
-        String summary = summaryCache.discussions.get(discussion.number());
-        if (summary != null) {
-            return summary;
+        RenderResult summaryEntry = summaryCache.discussions.get(discussion.number());
+        if (summaryEntry != null) {
+            return summaryEntry;
         }
         log.thinking("Summarizing discussion: " + discussion.title());
-        summary = promptWrapper.summarize(renderService.discussion(discussion));
-        summaryCache.discussions.put(discussion.number(), summary);
+
+        String summary = promptWrapper.summarize(renderService.discussion(discussion).text());
+        RenderResult renderResult = new RenderResult(summary, estimator.estimateTokenCountInText(summary));
+        summaryCache.discussions.put(discussion.number(), renderResult);
         summaryCache.dirty = true;
-        return summary;
+        return renderResult;
     }
 
-    public String summarize(String repoName, IssueModel issue) {
+    public RenderResult summarize(String repoName, IssueModel issue) {
         SummaryCache summaryCache = load(repoName);
-        String summary = summaryCache.issues.get(issue.number());
-        if (summary != null) {
-            return summary;
+        RenderResult summaryEntry = summaryCache.issues.get(issue.number());
+        if (summaryEntry != null) {
+            return summaryEntry;
         }
         log.thinking("Summarizing issue: " + issue.title());
-        summary = promptWrapper.summarize(renderService.issue(issue));
-        summaryCache.issues.put(issue.number(), summary);
+        String summary = promptWrapper.summarize(renderService.issue(issue).text());
+        RenderResult renderResult = new RenderResult(summary, estimator.estimateTokenCountInText(summary));
+        summaryCache.issues.put(issue.number(), renderResult);
         summaryCache.dirty = true;
-        return summary;
+        return renderResult;
     }
 
     public void prune(String repoName, ChangeSet changeSet) {
         SummaryCache summaryCache = load(repoName);
         for (Integer discussion : changeSet.discussions()) {
-            String summary = summaryCache.discussions.remove(discussion);
+            var summary = summaryCache.discussions.remove(discussion);
             if (summary != null) {
                 summaryCache.dirty = true;
             }
         }
         for (Integer issue : changeSet.issues()) {
-            String summary = summaryCache.issues.remove(issue);
+            var summary = summaryCache.issues.remove(issue);
             if (summary != null) {
                 summaryCache.dirty = true;
             }

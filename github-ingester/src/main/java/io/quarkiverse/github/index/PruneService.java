@@ -17,16 +17,27 @@ public class PruneService {
     @Inject
     RagIndexer ragIndexer;
 
+    @Inject
+    RenderService renderService;
+
     public void prune(String repoName, Earlier dateRange) {
         ChangeSet changeSet = pullCacheService.prune(repoName, dateRange);
         summaryService.prune(repoName, changeSet);
         ragIndexer.prune(repoName, changeSet);
+        renderService.prune(repoName, changeSet);
+    }
+
+    public void newPull(String repoName, ChangeSet changeSet) {
+        summaryService.prune(repoName, changeSet);
+        renderService.prune(repoName, changeSet);
+        ragIndexer.newPull(repoName, changeSet);
     }
 
     public void clear(String repoName) {
         pullCacheService.clear(repoName);
         summaryService.clear(repoName);
         ragIndexer.clear(repoName);
+        renderService.clear(repoName);
     }
 
 }

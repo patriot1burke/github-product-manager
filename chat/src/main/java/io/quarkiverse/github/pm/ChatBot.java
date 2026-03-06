@@ -18,7 +18,7 @@ public class ChatBot {
     ChatContext chatContext;
 
     @Inject
-    MainPrompt mainPrompt;
+    CommandPrompt mainPrompt;
 
     @OnOpen
     public void onOpen() {
@@ -30,10 +30,18 @@ public class ChatBot {
     @OnTextMessage
     @Blocking
     public void onMessage(String message) throws Exception {
-        chatContext.userMessage(message);
-        Result<String> result = mainPrompt.execute(message);
-        if (result.content() != null) {
-            chatContext.message(result.content());
+        Log.info("***** User Message: " + message);
+        try {
+
+            Result<String> result = mainPrompt.execute(message);
+            if (result.content() != null && chatContext.currentChat() != null) {
+                Log.info("***** Chat: " + chatContext.currentChatName());
+                String response = chatContext.currentChat().chat(message);
+                chatContext.markdown(response);
+            }
+        } catch (Exception e) {
+            Log.error(e);
+            chatContext.message("An error occurred, try again.");
         }
     }
 

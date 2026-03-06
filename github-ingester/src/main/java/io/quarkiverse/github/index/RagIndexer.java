@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -43,7 +44,7 @@ public class RagIndexer {
         boolean dirty = false;
     }
 
-    Map<String, EmbeddingStoreHolder> storeMap = new HashMap<>();
+    Map<String, EmbeddingStoreHolder> storeMap = new ConcurrentHashMap<>();
 
     public InMemoryEmbeddingStore<TextSegment> load(String repoName) {
         EmbeddingStoreHolder holder = storeMap.get(repoName);
@@ -111,7 +112,7 @@ public class RagIndexer {
                     map.put("label." + label, true);
                 }
                 Metadata metadata = Metadata.from(map);
-                Document doc = Document.from(renderService.discussion(discussion), metadata);
+                Document doc = Document.from(renderService.discussion(discussion).text(), metadata);
                 docs.add(doc);
             }
             ingester.ingest(docs);
@@ -126,7 +127,7 @@ public class RagIndexer {
                     map.put("label." + label, true);
                 }
                 Metadata metadata = Metadata.from(map);
-                Document doc = Document.from(renderService.issue(issue), metadata);
+                Document doc = Document.from(renderService.issue(issue).text(), metadata);
                 docs.add(doc);
             }
             ingester.ingest(docs);
@@ -155,6 +156,14 @@ public class RagIndexer {
             storeMap.remove(repoName);
             throw e;
         }
+    }
+
+    public void newPull(String repoName, ChangeSet changeSet) {
+        InMemoryEmbeddingStore<TextSegment> store = load(repoName);
+        if (store.isEmpty()) {
+            return;
+        }
+        index(repoName, changeSet);
     }
 
     public void clear(String repoName) {

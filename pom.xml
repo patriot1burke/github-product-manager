@@ -108,6 +108,11 @@
                 <artifactId>font-awesome</artifactId>
                 <version>6.7.2</version>
             </dependency>
+            <dependency>
+                <groupId>org.commonmark</groupId>
+                <artifactId>commonmark</artifactId>
+                <version>0.25.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <build>

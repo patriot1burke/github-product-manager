@@ -6,14 +6,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.github.api.GithubAPI.Repository;
@@ -48,15 +46,6 @@ public class ReportService {
 
     @Inject
     ObjectMapper objectMapper;
-
-    public Set<String> processLLMLabels(String labels) {
-        try {
-            return objectMapper.readValue(labels, new TypeReference<Set<String>>() {
-            });
-        } catch (Exception e) {
-            throw new RuntimeException("Error processing LLM labels: " + labels, e);
-        }
-    }
 
     public BasicReport basicReport(String repoName) {
         PullCache pullCache = pullCacheService.load(repoName);
@@ -145,12 +134,12 @@ public class ReportService {
         List<String> summaries = new ArrayList<>();
         for (IssueModel issue : pullCache.issues.values()) {
             if (issue.labels().containsAll(labels)) {
-                summaries.add(summaryService.summarize(repoName, issue));
+                summaries.add(summaryService.summarize(repoName, issue).text());
             }
         }
         for (DiscussionModel discussion : pullCache.discussions.values()) {
             if (discussion.labels().containsAll(labels)) {
-                summaries.add(summaryService.summarize(repoName, discussion));
+                summaries.add(summaryService.summarize(repoName, discussion).text());
             }
         }
         if (summaries.isEmpty()) {

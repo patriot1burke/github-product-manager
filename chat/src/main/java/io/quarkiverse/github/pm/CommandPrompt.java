@@ -6,10 +6,8 @@ import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
 
-@RegisterAiService(
-//    chatLanguageModelSupplier = ChatModelSupplier.class
-)
-public interface MainPrompt {
+@RegisterAiService
+public interface CommandPrompt {
 
     @SystemMessage("""
             You are a helpful assistant that can help with tasks related to Github.

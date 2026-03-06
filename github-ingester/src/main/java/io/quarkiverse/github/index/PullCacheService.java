@@ -5,11 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.PreDestroy;
@@ -49,12 +49,15 @@ public class PullCacheService {
     ObjectMapper objectMapper;
 
     @Inject
-    RepositoryConfigService githubIndex;
+    RepositoryConfigService configService;
 
     @Inject
     PromptWrapper promptWrapper;
 
-    Map<String, PullCache> pullCacheMap = new HashMap<>();
+    @Inject
+    PruneService pruneService;
+
+    Map<String, PullCache> pullCacheMap = new ConcurrentHashMap<>();
 
     @PreDestroy
     public void preDestroy() {
@@ -128,7 +131,7 @@ public class PullCacheService {
 
     public Map<String, Label> getLabels(String repoName) {
         Repository repository = github.repository(repoName);
-        RepositoryConfig repoIndex = githubIndex.load(repoName);
+        RepositoryConfig repoIndex = configService.load(repoName);
         return getLabels(repository, repoIndex);
     }
 
@@ -140,7 +143,7 @@ public class PullCacheService {
     public ChangeSet pull(String repoName, Earlier range) {
         try {
             Repository repository = github.repository(repoName);
-            RepositoryConfig config = githubIndex.load(repoName);
+            RepositoryConfig config = configService.load(repoName);
             Map<String, Label> labels = getLabels(repository, config);
             PullCache pullCache = load(repoName);
 
@@ -179,7 +182,7 @@ public class PullCacheService {
                                                 reply.author() == null ? "unknown" : reply.author().login(), reply.body()))
                                         .collect(Collectors.toList())))
                         .collect(Collectors.toList());
-                DiscussionModel discussionModel = new DiscussionModel(discussion.number(), discussion.title(),
+                DiscussionModel discussionModel = new DiscussionModel(repoName, discussion.number(), discussion.title(),
                         discussion.author() == null ? "unknown" : discussion.author().login(), discussion.body(),
                         Instant.parse(discussion.createdAt()).toEpochMilli(),
                         Instant.parse(discussion.updatedAt()).toEpochMilli(), discussion.category().name(),
@@ -207,7 +210,7 @@ public class PullCacheService {
                         .map(comment -> new CommentModel(comment.author() == null ? "unknown" : comment.author().login(),
                                 comment.body()))
                         .collect(Collectors.toList());
-                IssueModel issueModel = new IssueModel(issue.number(), issue.title(),
+                IssueModel issueModel = new IssueModel(repoName, issue.number(), issue.title(),
                         issue.author() == null ? "unknown" : issue.author().login(),
                         issue.body(),
                         Instant.parse(issue.createdAt()).toEpochMilli(),
@@ -219,7 +222,9 @@ public class PullCacheService {
             if (issueChanges.size() > 0) {
                 pullCache.dirty = true;
             }
-            return new ChangeSet(discussionChanges, issueChanges);
+            ChangeSet changeSet = new ChangeSet(discussionChanges, issueChanges);
+            pruneService.newPull(repoName, changeSet);
+            return changeSet;
         } catch (RuntimeException e) {
             pullCacheMap.remove(repoName);
             throw e;
