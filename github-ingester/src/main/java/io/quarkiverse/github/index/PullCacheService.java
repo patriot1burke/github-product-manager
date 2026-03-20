@@ -66,6 +66,29 @@ public class PullCacheService {
         }
     }
 
+    public Set<String> repos() {
+        Set<String> repos = new HashSet<>(pullCacheMap.keySet());
+        Path cacheDir = Path.of(baseDirectory);
+        if (!Files.exists(cacheDir) || !Files.isDirectory(cacheDir)) {
+            return repos;
+        }
+        try {
+            Files.walk(cacheDir)
+                    .filter(p -> Files.isRegularFile(p) && "pull.json".equals(p.getFileName().toString()))
+                    .forEach(pullJsonPath -> {
+                        Path relative = cacheDir.relativize(pullJsonPath);
+                        Path parent = relative.getParent();
+                        if (parent != null && parent.getNameCount() > 0) {
+                            String repoName = parent.toString().replace(java.io.File.separatorChar, '/');
+                            repos.add(repoName);
+                        }
+                    });
+        } catch (IOException e) {
+            log.warnv("Failed to walk cache dir {0}: {1}", cacheDir, e.getMessage());
+        }
+        return repos;
+    }
+
     public PullCache load(String repoName) {
         PullCache pullCache = pullCacheMap.get(repoName);
         if (pullCache != null) {
@@ -84,7 +107,7 @@ public class PullCacheService {
             }
         }
         if (pullCache == null) {
-            pullCache = new PullCache();
+            pullCache = new PullCache(repoName);
         }
         pullCacheMap.put(repoName, pullCache);
         return pullCache;
@@ -147,12 +170,16 @@ public class PullCacheService {
             Map<String, Label> labels = getLabels(repository, config);
             PullCache pullCache = load(repoName);
 
-            if (range == null) {
-                range = Earlier.month;
-            }
+            long since;
 
-            long rangeSince = range.fromMillis();
-            long since = pullCache.lastPulled > rangeSince ? pullCache.lastPulled : rangeSince;
+            if (pullCache.lastPulled == 0) {
+                since = range == null ? Earlier.month.fromMillis() : range.fromMillis();
+            } else if (range == null) {
+                // get all from last pull
+                since = pullCache.lastPulled;
+            } else {
+                since = pullCache.lastPulled > range.fromMillis() ? pullCache.lastPulled : range.fromMillis();
+            }
             pullCache.lastPulled = System.currentTimeMillis();
             log.thinking("Pulling since: " + Instant.ofEpochMilli(since).toString());
             log.thinking("Pulling discussions...");

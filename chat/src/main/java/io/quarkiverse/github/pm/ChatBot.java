@@ -30,14 +30,19 @@ public class ChatBot {
     @OnTextMessage
     @Blocking
     public void onMessage(String message) throws Exception {
-        Log.info("***** User Message: " + message);
+        Log.info("User Message: " + message);
         try {
 
-            Result<String> result = mainPrompt.execute(message);
-            if (result.content() != null && chatContext.currentChat() != null) {
-                Log.info("***** Chat: " + chatContext.currentChatName());
-                String response = chatContext.currentChat().chat(message);
-                chatContext.markdown(response);
+            if (chatContext.currentChat() == null) {
+                Result<String> result = mainPrompt.execute(message);
+                if (result.content() != null) {
+                    chatContext.markdown(result.content());
+                }
+            } else {
+                Result<String> response = chatContext.currentChat().chat(message);
+                if (response.content() != null) {
+                    chatContext.markdown(response.content());
+                }
             }
         } catch (Exception e) {
             Log.error(e);

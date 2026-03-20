@@ -25,12 +25,22 @@ public class RenderService {
         @TemplateContents("""
                 # Title: {discussion.title}
                 ## Author: {discussion.author}
+                {#if discussion.category != null}
+                ## Category
+                {discussion.category}
+                {/if}
+                {#if discussion.labels.size() > 0}
+                ## Labels
+                {#each discussion.labels}
+                {it}
+                {/each}
+                {/if}
 
-                # Topic:
+                # Discussion Body
 
                 {discussion.body}
 
-                # Comments:
+                # Comments
 
                 {#for comment in discussion.comments}
                 ## Author: {comment.author}
@@ -49,12 +59,18 @@ public class RenderService {
         @TemplateContents("""
                 # Title: {issue.title}
                 ## Author: {issue.author}
+                {#if issue.labels.size() > 0}
+                ## Labels:
+                {#each issue.labels}
+                {it}
+                {/each}
+                {/if}
 
-                # Topic:
+                # Issue Body
 
                 {issue.body}
 
-                # Comments:
+                # Comments
 
                 {#for comment in issue.comments}
                 ## Author: {comment.author}

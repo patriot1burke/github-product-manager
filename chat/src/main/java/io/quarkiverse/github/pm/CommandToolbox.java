@@ -67,8 +67,8 @@ public class CommandToolbox {
     @Inject
     LabelRagService labelRagService;
 
-    @Tool(value = "create chat window for a set of labels", returnBehavior = ReturnBehavior.IMMEDIATE)
-    public void createChatWindow(@P(required = false, value = "The repository to generate a window for") String repository,
+    @Tool(value = "start chat window for a labeled set of discussions and issues", returnBehavior = ReturnBehavior.IMMEDIATE)
+    public void startChatWindow(@P(required = false, value = "The repository to generate a window for") String repository,
             @P(required = true, value = "The labels to generate a window for") Set<String> labels) {
         if (repository == null) {
             repository = chatContext.currentRepository();
@@ -82,7 +82,9 @@ public class CommandToolbox {
         String chatName = repository + ":" + labels.stream().collect(Collectors.joining("-"));
         ManagedChatService.ManagedChat chat = labelRagService.ragWithLabels(repository, labels);
         chatContext.currentChat(chatName, chat);
-        chatContext.thinking("Created chat window " + chatName + ".");
+        chatContext.thinking(
+                "Started chat around discussions and issues with labels: " + labels.stream().collect(Collectors.joining(", ")));
+        chatContext.thinking("When you are done, just tell me you to end the chat.");
     }
 
     @CheckedTemplate

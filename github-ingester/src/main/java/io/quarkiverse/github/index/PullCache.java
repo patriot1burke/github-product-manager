@@ -10,6 +10,14 @@ import io.quarkiverse.github.index.model.DiscussionModel;
 import io.quarkiverse.github.index.model.IssueModel;
 
 public class PullCache {
+    public PullCache() {
+    }
+
+    public PullCache(String repo) {
+        this.repo = repo;
+    }
+
+    public String repo;
     public long lastPulled = 0;
 
     @JsonDeserialize(as = ConcurrentHashMap.class)
