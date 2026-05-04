@@ -8,8 +8,8 @@
         <version>999-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>github-ingester</artifactId>
-    <name>Github Ingester</name>
+    <artifactId>ai-github-scanner-services</artifactId>
+    <name>AI Github Scanner Services</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkiverse.graphql</groupId>
@@ -20,8 +20,16 @@
             <artifactId>quarkus-langchain4j-openai</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-chat-scopes</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-qute</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-orm-panache</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -59,6 +67,7 @@
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
+                <extensions>true</extensions>
                 <executions>
                     <execution>
                         <goals>

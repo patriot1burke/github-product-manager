@@ -1,18 +1,15 @@
-package io.quarkiverse.github.index;
+package io.quarkiverse.ai.github.scanner;
 
 import java.util.Collection;
 import java.util.Set;
 
-import jakarta.enterprise.context.InvocationScoped;
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.enterprise.context.ApplicationScoped;
-
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
-import io.quarkiverse.github.api.Discussions.Discussion;
-import io.quarkiverse.github.api.Issues.Issue;
-import io.quarkiverse.github.api.Labels.Label;
+import io.quarkiverse.ai.github.api.Discussions.Discussion;
+import io.quarkiverse.ai.github.api.Issues.Issue;
+import io.quarkiverse.ai.github.api.Labels.Label;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.chatscopes.InvocationScoped;
 
 @RegisterAiService
 @InvocationScoped

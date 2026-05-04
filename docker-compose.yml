@@ -1,0 +1,14 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17  # Prebuilt Postgres image with pgvector
+    container_name: postgres-pgvector
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ai_github_scanner_db
+    volumes:
+      - postgres_data:/home/bburke/projects/ai-github-scanner-db
+volumes:
+  postgres_data:

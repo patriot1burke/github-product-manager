@@ -21,9 +21,9 @@ public class PullService {
     RenderService renderService;
 
     public void pull(String repoName, Earlier dateRange) {
-        ChangeSet changeSet = pullCacheService.pull(repoName, dateRange);   
+        ChangeSet changeSet = pullCacheService.pull(repoName, dateRange);
         summaryService.prune(repoName, changeSet);
         ragIndexer.index(repoName, changeSet);
     }
 
- }
+}

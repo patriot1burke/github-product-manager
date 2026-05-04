@@ -1,8 +1,8 @@
-package io.quarkiverse.github.api;
+package io.quarkiverse.ai.github.api;
 
 import java.util.List;
 
-import io.quarkiverse.github.api.Labels.LabelConnectionNameOnly;
+import io.quarkiverse.ai.github.api.Labels.LabelConnectionNameOnly;
 
 public interface Discussions {
 
@@ -41,14 +41,5 @@ public interface Discussions {
     public record DiscussionConnection(PageInfo pageInfo, List<Discussion> nodes)
             implements
                 GithubConnection<Discussion> {
-    }
-
-    public record DiscussionForBasicReport(DiscussionCategoryNameOnly category,
-            String createdAt,
-            String updatedAt, LabelConnectionNameOnly labels) {
-    }
-
-    public record DiscussionConnectionForBasicReport(PageInfo pageInfo,
-            List<DiscussionForBasicReport> nodes) implements GithubConnection<DiscussionForBasicReport> {
     }
 }

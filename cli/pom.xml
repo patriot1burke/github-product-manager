@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.quarkiverse.github.pm</groupId>
-    <artifactId>github-product-manager-parent</artifactId>
+    <artifactId>ai-github-scanner-parent</artifactId>
     <version>999-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
