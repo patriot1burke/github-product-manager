@@ -1,5 +1,15 @@
 package io.quarkiverse.ai.github.chat;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import io.quarkiverse.ai.github.db.EmbeddingsRepository;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
 import io.quarkiverse.ai.github.db.GithubLabelRepository;
@@ -10,22 +20,18 @@ import io.quarkiverse.ai.github.scanner.model.TimePeriod;
 import io.quarkiverse.langchain4j.chatscopes.ChatRouteContext;
 import io.quarkiverse.langchain4j.chatscopes.ChatScope;
 import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @ChatScoped
 public class RepositoryFilterBuilder {
 
-    public record LabelInfo(String name, String description) {}
+    public record LabelInfo(String name, String description) {
+    }
 
     @Inject
     GithubLabelRepository labelRepository;
+
+    @Inject
+    EmbeddingsRepository embeddings;
 
     @Inject
     ChatRouteContext context;
@@ -74,9 +80,11 @@ public class RepositoryFilterBuilder {
 
     public void outputFilter(RepositoryFilter filter) {
         List<String> parts = new ArrayList<>();
-        if (filter.repository != null) parts.add("repo = '" + filter.repository + "'");
+        if (filter.repository != null)
+            parts.add("repo = '" + filter.repository + "'");
         if (filter.filters != null) {
-            if (filter.filters.type != null) parts.add("type = '" + filter.filters.type.toLowerCase() + "'");
+            if (filter.filters.type != null)
+                parts.add("type = '" + filter.filters.type.toLowerCase() + "'");
             if (!filter.filters.andLabels.isEmpty())
                 parts.add(filter.filters.andLabels.stream()
                         .map(l -> "label = '" + l + "'")
@@ -93,10 +101,16 @@ public class RepositoryFilterBuilder {
                 parts.add(filter.filters.orFilters.stream()
                         .map(f -> "filter = '" + f + "'")
                         .collect(Collectors.joining(" or ")));
-            if (filter.filters.updatedSince != null) parts.add("updatedSince = '" + filter.filters.updatedSince + "'");
-            if (filter.filters.createdSince != null) parts.add("createdSince = '" + filter.filters.createdSince + "'");
+            if (filter.filters.updatedSince != null)
+                parts.add("updatedSince = '" + filter.filters.updatedSince + "'");
+            if (filter.filters.createdSince != null)
+                parts.add("createdSince = '" + filter.filters.createdSince + "'");
         }
         context.response().thinking(String.join("\n", parts));
+        if (filter.repository != null) {
+            int count = embeddings.filterCount(filter);
+            context.response().thinking("Filter touches " + count + " entries");
+        }
     }
 
     @Tool("set the description of the filter you are creating")
@@ -129,7 +143,8 @@ public class RepositoryFilterBuilder {
         }
         pullLabels();
         if (!cachedLabels.containsKey(label)) {
-            throw new IllegalArgumentException("Label not found.  Obtain labels from getLabels() tool call and ask user to pick from that list");
+            throw new IllegalArgumentException(
+                    "Label not found.  Obtain labels from getLabels() tool call and ask user to pick from that list");
         }
     }
 
@@ -182,11 +197,14 @@ public class RepositoryFilterBuilder {
 
     @Tool(value = "Finish building the filter and return the final result", returnBehavior = ReturnBehavior.IMMEDIATE)
     @Transactional
-    public void finishBuild() {
-        if (changes.isEmpty()) throw new IllegalStateException("No filter has been created");
+    public void finish() {
+        if (changes.isEmpty())
+            throw new IllegalStateException("No filter has been created");
         RepositoryFilter filter = changes.getLast();
-        if (filter.name == null || filter.name.isBlank()) throw new IllegalStateException("Filter must have a name");
-        if (filter.description == null || filter.description.isBlank()) throw new IllegalStateException("Filter must have a description");
+        if (filter.name == null || filter.name.isBlank())
+            throw new IllegalStateException("Filter must have a name");
+        if (filter.description == null || filter.description.isBlank())
+            throw new IllegalStateException("Filter must have a description");
         RepositoryFilterKey key = new RepositoryFilterKey(filter.repository, filter.name);
         RepositoryFilter.persist(filter);
         ChatScope.pop();

@@ -8,7 +8,8 @@ public class RepositoryFilterKey implements Serializable {
     public String repository;
     public String name;
 
-    public RepositoryFilterKey() {}
+    public RepositoryFilterKey() {
+    }
 
     public RepositoryFilterKey(String repository, String name) {
         this.repository = repository;
@@ -17,8 +18,10 @@ public class RepositoryFilterKey implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof RepositoryFilterKey that)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof RepositoryFilterKey that))
+            return false;
         return Objects.equals(repository, that.repository) && Objects.equals(name, that.name);
     }
 

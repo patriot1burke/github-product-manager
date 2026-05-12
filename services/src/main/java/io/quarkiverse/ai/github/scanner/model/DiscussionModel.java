@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 public record DiscussionModel(String repo, int number, String title, String author, String body, boolean closed, long closedAt,
-                              long createdAt, long updatedAt,
-                              String type, Set<String> labels, List<DiscussionCommentModel> comments) {
+        long createdAt, long updatedAt,
+        String type, Set<String> labels, List<DiscussionCommentModel> comments) {
 
 }

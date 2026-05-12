@@ -1,15 +1,16 @@
 package io.quarkiverse.ai.github.db;
 
-import io.quarkiverse.ai.github.api.Github;
-import io.quarkiverse.ai.github.api.Labels;
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import io.quarkiverse.ai.github.api.Github;
+import io.quarkiverse.ai.github.api.Labels;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 
 @ApplicationScoped
 public class GithubLabelRepository implements PanacheRepositoryBase<GithubLabel, GithubLabelKey> {

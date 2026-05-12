@@ -17,8 +17,10 @@ public class GithubLabelKey implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof GithubLabelKey that)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof GithubLabelKey that))
+            return false;
         return Objects.equals(repository, that.repository) && Objects.equals(name, that.name);
     }
 
