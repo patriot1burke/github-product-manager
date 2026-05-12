@@ -9,7 +9,6 @@ import io.quarkiverse.ai.github.api.Discussions.DiscussionCategoryConnection;
 import io.quarkiverse.ai.github.api.Discussions.DiscussionConnection;
 import io.quarkiverse.ai.github.api.GithubConnection.IterableConnection;
 import io.quarkiverse.ai.github.api.Issues.IssueConnection;
-import io.quarkiverse.ai.github.api.Issues.IssueConnectionForBasicReport;
 import io.quarkiverse.ai.github.api.Labels.LabelConnection;
 import io.quarkiverse.graphql.client.ArgsOnly;
 import io.quarkiverse.graphql.client.DefaultVariables;
@@ -82,17 +81,6 @@ public interface GithubAPI {
             default Iterable<Issues.Issue> full(int pageSize) {
                 return new IterableConnection<Issues.Issue>(
                         (after) -> full(pageSize, null, after));
-            }
-
-            @Query
-            @ArgsOnly
-            @DefaultVariables(".nodes.labels.first: 100")
-            IssueConnectionForBasicReport basicReport(int first, Issues.Since filterBy, @Nullable String after);
-
-            default Iterable<Issues.IssueForBasicReport> basicReport(int pageSize, String since) {
-                Issues.Since filterBy = since != null ? new Issues.Since(since) : null;
-                return new IterableConnection<Issues.IssueForBasicReport>(
-                        (after) -> basicReport(pageSize, filterBy, after));
             }
         }
 

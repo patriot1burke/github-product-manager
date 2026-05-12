@@ -29,9 +29,8 @@ public class RenderService {
         @TemplateContents("""
                 # Title: {discussion.title}
                 ## Author: {discussion.author}
-                {#if discussion.category != null}
-                ## Category
-                {discussion.category}
+                {#if discussion.type != null}
+                ## Type: {discussion.type}
                 {/if}
                 {#if discussion.labels.size() > 0}
                 ## Labels
@@ -63,9 +62,8 @@ public class RenderService {
         @TemplateContents("""
                 # Title: {discussion.title}
                 ## Author: {discussion.author}
-                {#if discussion.category != null}
-                ## Category
-                {discussion.category}
+                {#if discussion.type != null}
+                ## Type: {discussion.type}
                 {/if}
                 {#if discussion.labels.size() > 0}
                 ## Labels
@@ -101,6 +99,9 @@ public class RenderService {
         @TemplateContents("""
                 # Title: {issue.title}
                 ## Author: {issue.author}
+                {#if issue.type != null}
+                ## Type: {issue.type}
+                {/if}
                 {#if issue.labels.size() > 0}
                 ## Labels:
                 {#each issue.labels}
@@ -124,6 +125,9 @@ public class RenderService {
         @TemplateContents("""
                 # Title: {issue.title}
                 ## Author: {issue.author}
+                {#if issue.type != null}
+                ## Type: {issue.type}
+                {/if}
                 {#if issue.labels.size() > 0}
                 ## Labels:
                 {#each issue.labels}

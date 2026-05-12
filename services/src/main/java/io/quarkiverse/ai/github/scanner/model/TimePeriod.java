@@ -5,6 +5,8 @@ import java.time.temporal.ChronoUnit;
 
 public enum TimePeriod {
 
+    day(1),
+    week(7),
     month(30),
     quarter(90),
     year(365)
