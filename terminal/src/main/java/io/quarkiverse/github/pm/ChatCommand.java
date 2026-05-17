@@ -1,13 +1,14 @@
 package io.quarkiverse.github.pm;
 
+import java.util.Scanner;
+import java.util.Stack;
+
+import jakarta.inject.Inject;
+
 import io.quarkiverse.ai.github.chat.ChatWindow;
 import io.quarkiverse.github.pm.util.BaseCommand;
 import io.quarkiverse.langchain4j.chatscopes.LocalChatRoutes;
-import jakarta.inject.Inject;
 import picocli.CommandLine;
-
-import java.util.Scanner;
-import java.util.Stack;
 
 @CommandLine.Command(name = "chat", description = "Start a chat session")
 public class ChatCommand extends BaseCommand implements Runnable {
@@ -20,16 +21,15 @@ public class ChatCommand extends BaseCommand implements Runnable {
 
     @Inject
     LocalChatRoutes.Client client;
-
+    Stack<String> placeholder = new Stack<>();
 
     public void run() {
-        Stack<String> placeholder = new Stack<>();
-        placeholder.add("Book your vacation");
+        placeholder.add("Main menu");
 
         LocalChatRoutes.SessionBuilder builder = client.builder()
                 .messageHandler(message -> System.out.println(message))
                 .thinkingHandler(thinking -> System.out.println(DIM + thinking + RESET))
-                .eventHandler(ChatWindow.PUSH_CHAT_WINDOW, (event) -> placeholder.push((String)event))
+                .eventHandler(ChatWindow.PUSH_CHAT_WINDOW, (event) -> placeholder.push((String) event))
                 .eventHandler(ChatWindow.POP_CHAT_WINDOW, (event) -> placeholder.pop());
 
         LocalChatRoutes.Session session = builder.connect();
@@ -41,7 +41,7 @@ public class ChatCommand extends BaseCommand implements Runnable {
 
         Scanner scanner = new Scanner(System.in);
 
-        System.out.print(BOLD_GREEN + placeholder.peek() + RESET + ": ");
+        prompt();
         while (scanner.hasNextLine()) {
             String userMessage = scanner.nextLine().trim();
             if (!userMessage.isEmpty()) {
@@ -49,7 +49,12 @@ public class ChatCommand extends BaseCommand implements Runnable {
                 session.chat(userMessage);
             }
             System.out.println();
-            System.out.print(BOLD_GREEN + placeholder.peek() + RESET + ": ");
+            prompt();
+
         }
+    }
+
+    private void prompt() {
+        System.out.print("[" + BOLD_GREEN + placeholder.peek() + RESET + "]: ");
     }
 }

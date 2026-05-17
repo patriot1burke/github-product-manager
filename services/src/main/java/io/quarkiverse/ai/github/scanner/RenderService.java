@@ -156,7 +156,7 @@ public class RenderService {
 
     @Inject
     Summarization summarization;
-    private static final int MAX_EMBEDDING_TOKENS = 8191;
+    private static final int MAX_EMBEDDING_TOKENS = 8000;
     public static final int MAX_WORDS = (int) (MAX_EMBEDDING_TOKENS * 0.90 * 0.75);
 
     public RenderResult discussion(DiscussionModel discussion) {

@@ -12,7 +12,7 @@ import picocli.CommandLine.Command;
 
 @TopCommand
 @Command(name = "ai-github", mixinStandardHelpOptions = true, subcommands = {
-        PullCommand.class,
+        PullCommand.class, ChatCommand.class
 }, description = "Tool for pulling Github issues, discussions, summarizing, and ingesting into a vector database")
 public class AiGithub extends BaseCommand implements Callable<Integer> {
     public AiGithub() {

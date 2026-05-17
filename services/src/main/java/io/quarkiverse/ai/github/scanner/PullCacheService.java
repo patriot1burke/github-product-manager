@@ -92,7 +92,6 @@ public class PullCacheService {
                 embeddingsDb.prune(discussionModel);
                 GithubEntry entry = persist(discussionModel);
                 entries.add(entry);
-                log.thinking("\tcreating document");
                 createDoc(docs, discussionModel, entry.metadata);
             }
             int numDiscussions = entries.size();
@@ -108,7 +107,6 @@ public class PullCacheService {
                 embeddingsDb.prune(issueModel);
                 GithubEntry entry = persist(issueModel);
                 entries.add(entry);
-                log.thinking("\tcreating document");
                 createDoc(docs, issueModel, entry.metadata);
             }
             int numIssues = entries.size() - numDiscussions;
@@ -195,20 +193,20 @@ public class PullCacheService {
 
     private void addLabels(Map<String, Object> map, Collection<String> labels) {
         for (String label : labels) {
-            map.put("label_" + label, "true");
+            map.put(GithubMetadata.label(label), "true");
         }
     }
 
     public GithubEntry persist(IssueModel issue) {
         Map<String, Object> map = new HashMap<>();
-        map.put("repo", issue.repo());
-        map.put("number", issue.number());
-        map.put("type", GitType.ISSUE.name());
-        map.put("updatedAt", issue.updatedAt());
-        map.put("createdAt", issue.createdAt());
-        map.put("author", issue.author());
-        map.put("closed", Boolean.toString(issue.closed()));
-        map.put("closedAt", issue.closedAt());
+        map.put(GithubMetadata.REPOSITORY, issue.repo());
+        map.put(GithubMetadata.ID, issue.number());
+        map.put(GithubMetadata.TYPE, GitType.ISSUE.name());
+        map.put(GithubMetadata.UPDATED_AT, issue.updatedAt());
+        map.put(GithubMetadata.CREATED_AT, issue.createdAt());
+        map.put(GithubMetadata.AUTHOR, issue.author());
+        map.put(GithubMetadata.CLOSED, Boolean.toString(issue.closed()));
+        map.put(GithubMetadata.CLOSED_AT, issue.closedAt());
         addLabels(map, issue.labels());
         RenderResult rendering = renderService.issue(issue);
         GithubEntry entry = new GithubEntry(issue.repo(), issue.number(), GitType.ISSUE, rendering.text(), map);
@@ -219,14 +217,14 @@ public class PullCacheService {
 
     public GithubEntry persist(DiscussionModel discussion) {
         Map<String, Object> map = new HashMap<>();
-        map.put("repo", discussion.repo());
-        map.put("number", discussion.number());
-        map.put("type", GitType.DISCUSSION.name());
-        map.put("updatedAt", discussion.updatedAt());
-        map.put("createdAt", discussion.createdAt());
-        map.put("author", discussion.author());
-        map.put("closed", Boolean.toString(discussion.closed()));
-        map.put("closedAt", discussion.closedAt());
+        map.put(GithubMetadata.REPOSITORY, discussion.repo());
+        map.put(GithubMetadata.ID, discussion.number());
+        map.put(GithubMetadata.TYPE, GitType.DISCUSSION.name());
+        map.put(GithubMetadata.UPDATED_AT, discussion.updatedAt());
+        map.put(GithubMetadata.CREATED_AT, discussion.createdAt());
+        map.put(GithubMetadata.AUTHOR, discussion.author());
+        map.put(GithubMetadata.CLOSED, Boolean.toString(discussion.closed()));
+        map.put(GithubMetadata.CLOSED_AT, discussion.closedAt());
         addLabels(map, discussion.labels());
         RenderResult rendering = renderService.discussion(discussion);
         GithubEntry entry = new GithubEntry(discussion.repo(), discussion.number(), GitType.DISCUSSION, rendering.text(), map);
@@ -250,6 +248,7 @@ public class PullCacheService {
             Metadata metadata = Metadata.from(metaMap);
             Document doc = Document.from(rendering.text(), metadata);
             docs.add(doc);
+            log.thinking("\tcreated document with " + rendering.tokenCount() + " tokens");
         }
     }
 
@@ -259,6 +258,7 @@ public class PullCacheService {
             Metadata metadata = Metadata.from(metaMap);
             Document doc = Document.from(rendering.text(), metadata);
             docs.add(doc);
+            log.thinking("\tcreated document with " + rendering.tokenCount() + " tokens");
         }
     }
 

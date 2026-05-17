@@ -113,42 +113,44 @@ public class EmbeddingsRepository {
         if (filter.repository != null) {
             sb.append("metadata->>'repo' = '" + filter.repository + "'");
         }
-        Filters filters = filter.filters;
-        if (filters.type != null) {
-            if (sb.length() > 0) {
-                sb.append(" AND ");
-            }
-            sb.append("metadata->>'type' = '" + filters.type + "'");
-        }
-        if (filters.updatedSince != null) {
-            if (sb.length() > 0) {
-                sb.append(" AND ");
-            }
-            sb.append("(metadata->>'updatedAt')::numeric > " + filters.updatedSince.fromMillis());
-        }
-        if (filters.createdSince != null) {
-            if (sb.length() > 0) {
-                sb.append(" AND ");
-            }
-            sb.append("(metadata->>'createdAt')::numeric > " + filters.createdSince.fromMillis());
-        }
-        if (filters.andLabels != null && !filters.andLabels.isEmpty()) {
-            for (String label : filters.andLabels) {
+        if (filter.filters != null) {
+            Filters filters = filter.filters;
+            if (filters.type != null) {
                 if (sb.length() > 0) {
                     sb.append(" AND ");
                 }
-                sb.append("metadata->>'label_" + label + "' = 'true'");
+                sb.append("metadata->>'type' = '" + filters.type + "'");
             }
-        }
-        if (filters.orLabels != null && !filters.orLabels.isEmpty()) {
-            StringBuilder or = new StringBuilder();
-            for (String label : filters.orLabels) {
-                if (or.length() > 0) {
-                    or.append(" OR ");
+            if (filters.updatedSince != null) {
+                if (sb.length() > 0) {
+                    sb.append(" AND ");
                 }
-                or.append("metadata->>'label_" + label + "' = 'true'");
+                sb.append("(metadata->>'updatedAt')::numeric > " + filters.updatedSince.fromMillis());
             }
-            sb.append(" AND (" + or.toString() + ")");
+            if (filters.createdSince != null) {
+                if (sb.length() > 0) {
+                    sb.append(" AND ");
+                }
+                sb.append("(metadata->>'createdAt')::numeric > " + filters.createdSince.fromMillis());
+            }
+            if (filters.andLabels != null && !filters.andLabels.isEmpty()) {
+                for (String label : filters.andLabels) {
+                    if (sb.length() > 0) {
+                        sb.append(" AND ");
+                    }
+                    sb.append("metadata->>'label_" + label + "' = 'true'");
+                }
+            }
+            if (filters.orLabels != null && !filters.orLabels.isEmpty()) {
+                StringBuilder or = new StringBuilder();
+                for (String label : filters.orLabels) {
+                    if (or.length() > 0) {
+                        or.append(" OR ");
+                    }
+                    or.append("metadata->>'label_" + label + "' = 'true'");
+                }
+                sb.append(" AND (" + or.toString() + ")");
+            }
         }
         return sb.toString();
     }
@@ -166,6 +168,5 @@ public class EmbeddingsRepository {
             throw new RuntimeException(e);
         }
     }
-
 
 }

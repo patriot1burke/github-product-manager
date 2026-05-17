@@ -1,1 +1,1 @@
-# github-product-manager
+# AI Github Index
