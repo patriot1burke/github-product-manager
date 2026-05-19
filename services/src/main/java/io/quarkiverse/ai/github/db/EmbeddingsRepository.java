@@ -47,18 +47,18 @@ public class EmbeddingsRepository {
         }
     }
 
-    public boolean prune(IssueModel issue) {
+    public void prune(IssueModel issue) {
         String repo = issue.repo();
         int number = issue.number();
         String type = GitType.ISSUE.name();
-        return deleteEmbedding(repo, number, type);
+        deleteEmbedding(repo, number, type);
     }
 
-    public boolean prune(DiscussionModel discussion) {
+    public void prune(DiscussionModel discussion) {
         String repo = discussion.repo();
         int number = discussion.number();
         String type = GitType.DISCUSSION.name();
-        return deleteEmbedding(repo, number, type);
+        deleteEmbedding(repo, number, type);
     }
 
     public Map<String, Object> metadata(String repo, int number, String type) {

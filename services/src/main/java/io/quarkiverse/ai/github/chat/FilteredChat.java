@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-import dev.langchain4j.agent.tool.ReturnBehavior;
-import dev.langchain4j.agent.tool.Tool;
-import io.quarkiverse.langchain4j.chatscopes.*;
 import jakarta.inject.Inject;
 
+import dev.langchain4j.agent.tool.ReturnBehavior;
+import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.TextContent;
@@ -19,6 +18,7 @@ import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.Content;
+import dev.langchain4j.service.Result;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
@@ -30,6 +30,7 @@ import io.quarkiverse.ai.github.db.Filters;
 import io.quarkiverse.ai.github.db.RepositoryFilter;
 import io.quarkiverse.ai.github.scanner.GithubMetadata;
 import io.quarkiverse.ai.github.util.AppLogger;
+import io.quarkiverse.langchain4j.chatscopes.*;
 
 @ChatScoped
 public class FilteredChat implements Supplier<RetrievalAugmentor> {
@@ -50,8 +51,12 @@ public class FilteredChat implements Supplier<RetrievalAugmentor> {
     @Inject
     FilteredChatPrompt prompt;
 
+    @Inject
+    FilteredChatMenuPrompt menuPrompt;
+
     RepositoryFilter filter;
     Filter embeddingFilter;
+    double minScore;
 
     public static final int MAX_INPUT_TOKENS = 120000;
     public static final int MAX_RESULTS = MAX_INPUT_TOKENS / 100;
@@ -63,6 +68,7 @@ public class FilteredChat implements Supplier<RetrievalAugmentor> {
 
     public void setFilter(RepositoryFilter filter) {
         this.filter = filter;
+        this.minScore = filter.minScore;
         embeddingFilter = new IsEqualTo(GithubMetadata.REPOSITORY, filter.repository);
         if (filter.filters == null) {
             return;
@@ -97,10 +103,16 @@ public class FilteredChat implements Supplier<RetrievalAugmentor> {
 
     @ChatRoute("filtered-chat")
     public void chat(@UserMessage String msg) {
-        if (msg.equals("done")) {
+        if (msg.equals("done") || msg.equals("exit")) {
             finishChat();
             return;
         }
+        Result<String> toolCall = menuPrompt.executeOperation(msg);
+        if (toolCall.content() == null) {
+            // a command was executed, so just return
+            return;
+        }
+
         String result = prompt.chatWithFilter(msg);
         ctx.response().message(result);
         ctx.response().thinking("Type 'done' to end the chat");
@@ -109,7 +121,6 @@ public class FilteredChat implements Supplier<RetrievalAugmentor> {
 
     public AugmentationResult augment(AugmentationRequest augmentationRequest) {
         try {
-            ctx.response().thinking("Augmenting query");
             ChatMessage chatMessage = augmentationRequest.chatMessage();
             String queryText;
             dev.langchain4j.data.message.UserMessage userMessage;
@@ -119,21 +130,22 @@ public class FilteredChat implements Supplier<RetrievalAugmentor> {
                 throw new IllegalArgumentException("Unsupported message type: " + chatMessage.type());
             }
             queryText = userMessage.singleText();
-            ctx.response().thinking("Query: " + queryText);
             Embedding embedding = embeddingModel.embed(queryText).content();
             EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
                     .queryEmbedding(embedding)
                     .filter(embeddingFilter)
-                    .minScore(0.75)
+                    .minScore(minScore)
                     .maxResults(MAX_RESULTS)
                     .build();
 
             EmbeddingSearchResult<TextSegment> search = embeddingStore.search(request);
-            ctx.response().thinking("Found " + search.matches().size() + " results");
+
             // add token count to embedding metadata and whether full text should be pulled
             // from full entry
             List<Content> contents = new ArrayList<>();
             int totalTokens = tokenCountEstimator.estimateTokenCountInText(queryText);
+            int numEntries = 0;
+            double lowestScore = -1;
             for (EmbeddingMatch<TextSegment> segment : search.matches()) {
                 int tokenCount = tokenCountEstimator.estimateTokenCountInText(segment.embedded().text());
                 if (totalTokens + tokenCount > MAX_INPUT_TOKENS) {
@@ -141,8 +153,24 @@ public class FilteredChat implements Supplier<RetrievalAugmentor> {
                 }
                 totalTokens += tokenCount;
                 contents.add(Content.from(segment.embedded().text()));
+                numEntries++;
+                if (lowestScore == -1 || segment.score() < lowestScore) {
+                    lowestScore = segment.score();
+                }
             }
-            ctx.response().thinking("Token input: " + totalTokens);
+            if (search.matches().isEmpty()) {
+                ctx.response().thinking("No results found.");
+            } else {
+                if (contents.size() < search.matches().size()) {
+                    ctx.response().thinking(
+                            String.format("Input token limit reached.  Using top %d of %d related entries.  max score: %.2f"
+                                    + " min score: %.2f", numEntries, search.matches().size(), lowestScore, minScore));
+                } else {
+                    ctx.response().thinking(String.format("Found %d related entries.  max score: %.2f"
+                            + " min score: %.2f", numEntries, lowestScore, minScore));
+                }
+                ctx.response().thinking("Total input tokens: " + totalTokens);
+            }
 
             StringBuilder text = new StringBuilder(queryText);
             text.append("\n\n");
@@ -165,6 +193,7 @@ public class FilteredChat implements Supplier<RetrievalAugmentor> {
 
     @Tool(value = "Finish or exit the chat", returnBehavior = ReturnBehavior.IMMEDIATE)
     public void finishChat() {
+        ctx.response().thinking("Finishing chat");
         ChatScope.pop();
         ctx.response().event(ChatWindow.POP_CHAT_WINDOW, "");
     }
@@ -173,5 +202,17 @@ public class FilteredChat implements Supplier<RetrievalAugmentor> {
     public void resetChatMemory() {
         ctx.response().thinking("Resetting chat memory");
         ChatScopeMemory.clearMemory();
+    }
+
+    @Tool(value = "Set the minimum score threshold for filtering results", returnBehavior = ReturnBehavior.IMMEDIATE)
+    public void setMinScore(double score) {
+        ctx.response().thinking("Minimum score threshold set to " + score);
+        minScore = score;
+    }
+
+    @Tool(value = "Describe the filter being used for the chat session", returnBehavior = ReturnBehavior.IMMEDIATE)
+    public void describeFilter() {
+        ctx.response().thinking(filter.output());
+        ctx.response().thinking("chat overriding min score: " + minScore);
     }
 }

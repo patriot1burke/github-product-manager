@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.transaction.*;
 
@@ -25,6 +26,7 @@ import io.quarkiverse.ai.github.db.GithubEntry;
 import io.quarkiverse.ai.github.db.GithubEntryRepository;
 import io.quarkiverse.ai.github.scanner.model.*;
 import io.quarkiverse.ai.github.util.AppLogger;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 
 @ApplicationScoped
 public class PullCacheService {
@@ -51,15 +53,13 @@ public class PullCacheService {
     @Inject
     EmbeddingsRepository embeddingsDb;
 
-    @Inject
-    UserTransaction transaction;
-
     private static final int MAX_PRUNE_BATCH_SIZE = 20;
 
     long lastPulled(String repoName) {
         return embeddingsDb.lastPulled(repoName);
     }
 
+    @ActivateRequestContext
     public void pull(String repoName, TimePeriod range) {
         try {
             Repository repository = github.repository(repoName);
@@ -89,7 +89,7 @@ public class PullCacheService {
                 if (discussionModel == null) {
                     break;
                 }
-                embeddingsDb.prune(discussionModel);
+                prune(discussionModel);
                 GithubEntry entry = persist(discussionModel);
                 entries.add(entry);
                 createDoc(docs, discussionModel, entry.metadata);
@@ -104,7 +104,7 @@ public class PullCacheService {
                 if (issueModel == null) {
                     continue;
                 }
-                embeddingsDb.prune(issueModel);
+                prune(issueModel);
                 GithubEntry entry = persist(issueModel);
                 entries.add(entry);
                 createDoc(docs, issueModel, entry.metadata);
@@ -234,12 +234,48 @@ public class PullCacheService {
 
     private void persist(GithubEntry entry) {
         try {
-            transaction.begin();
+            QuarkusTransaction.begin();
             githubdb.persist(entry);
-            transaction.commit();
+            QuarkusTransaction.commit();
         } catch (Exception e) {
+            log.error("Error persisting entry", e);
+            QuarkusTransaction.rollback();
             throw new RuntimeException(e);
         }
+    }
+
+    public void prune(DiscussionModel discussion) {
+        try {
+            QuarkusTransaction.begin();
+            embeddingsDb.prune(discussion);
+            deleteEntry(discussion.repo(), discussion.number(), GitType.DISCUSSION);
+            QuarkusTransaction.commit();
+        } catch (Exception e) {
+            log.error("Error pruning discussion", e);
+            QuarkusTransaction.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void prune(IssueModel issue) {
+        try {
+            QuarkusTransaction.begin();
+            embeddingsDb.prune(issue);
+            deleteEntry(issue.repo(), issue.number(), GitType.ISSUE);
+            QuarkusTransaction.commit();
+        } catch (Exception e) {
+            log.error("Error pruning issue", e);
+            QuarkusTransaction.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteEntry(String repo, int number, GitType type) {
+        GithubEntry entry = githubdb.find(repo, number, type);
+        if (entry == null) {
+            return;
+        }
+        githubdb.delete(entry);
     }
 
     public void createDoc(List<Document> docs, DiscussionModel model, Map<String, Object> metaMap) {

@@ -29,6 +29,8 @@ public class RepositoryFilter extends PanacheEntityBase {
     @Column(columnDefinition = "JSON")
     public Filters filters;
 
+    public double minScore = 0.25;
+
     public String output() {
         List<String> parts = new ArrayList<>();
         if (name != null)
@@ -69,6 +71,7 @@ public class RepositoryFilter extends PanacheEntityBase {
             if (filters.createdSince != null)
                 parts.add("createdSince: '" + filters.createdSince + "'");
         }
+        parts.add("minScore: " + minScore);
         return String.join("\n", parts);
     }
 

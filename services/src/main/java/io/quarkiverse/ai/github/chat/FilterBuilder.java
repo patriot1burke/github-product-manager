@@ -155,6 +155,8 @@ public class FilterBuilder {
             }
             filter.filters.andLabels.add(label);
             outputFilter(filter);
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error adding label", e);
             throw new RuntimeException(e);
@@ -229,6 +231,13 @@ public class FilterBuilder {
             filter.filters = new Filters();
         }
         filter.filters.createdSince = period;
+    }
+
+    @Tool("Set the minScore for filter results")
+    public void minScore(double score) {
+        ctx.response().thinking("Setting minScore to " + score);
+        RepositoryFilter filter = next();
+        filter.minScore = score;
     }
 
     @Tool("Undo the last action")
