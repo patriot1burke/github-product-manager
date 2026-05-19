@@ -26,6 +26,7 @@ import io.quarkiverse.ai.github.db.GithubEntry;
 import io.quarkiverse.ai.github.db.GithubEntryRepository;
 import io.quarkiverse.ai.github.scanner.model.*;
 import io.quarkiverse.ai.github.util.AppLogger;
+import io.quarkiverse.graphql.client.QueryError;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 
 @ApplicationScoped
@@ -119,8 +120,11 @@ public class PullCacheService {
                     ingester.ingest(batch);
                 }
             }
-        } catch (RuntimeException e) {
-            throw e;
+        } catch (QueryError error) {
+            if (error.errorNode().toString().contains("NOT_FOUND")) {
+                log.error("Unknown repository: " + repoName);
+                return;
+            }
         }
     }
 

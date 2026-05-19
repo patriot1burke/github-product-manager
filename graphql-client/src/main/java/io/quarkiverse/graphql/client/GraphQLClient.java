@@ -178,7 +178,7 @@ public class GraphQLClient {
 
                     JsonNode json = objectMapper.readTree(body);
                     if (json.get("errors") != null) {
-                        throw new RuntimeException("Failed to execute query: " + json.get("errors").toString());
+                        throw new QueryError("Failed to execute query", json.get("errors"), objectMapper);
                     }
                     JsonNode data = json.get("data");
                     if (data == null) {
@@ -188,6 +188,8 @@ public class GraphQLClient {
                         data = data.get(field);
                     }
                     return objectMapper.treeToValue(data, objectMapper.constructType(returnType));
+                } catch (QueryError qe) {
+                    throw qe;
                 } catch (Exception e) {
                     LOG.error("Failed to execute query: ");
                     LOG.error(query);

@@ -12,6 +12,7 @@ import picocli.CommandLine;
 
 @CommandLine.Command(name = "chat", description = "Start a chat session")
 public class ChatCommand extends BaseCommand implements Runnable {
+    public static final String BOLD_RED = "\u001B[1;31m";
     public static final String BOLD_YELLOW = "\u001B[1;33m";
     // Bold Green escape sequence
     public static final String BOLD_GREEN = "\u001B[1;32m";
@@ -29,6 +30,7 @@ public class ChatCommand extends BaseCommand implements Runnable {
         LocalChatRoutes.SessionBuilder builder = client.builder()
                 .messageHandler(message -> System.out.println(message))
                 .thinkingHandler(thinking -> System.out.println(DIM + thinking + RESET))
+                .errorHandler(error -> System.err.println(BOLD_RED + error + RESET))
                 .eventHandler(ChatWindow.PUSH_CHAT_WINDOW, (event) -> placeholder.push((String) event))
                 .eventHandler(ChatWindow.POP_CHAT_WINDOW, (event) -> placeholder.pop());
 

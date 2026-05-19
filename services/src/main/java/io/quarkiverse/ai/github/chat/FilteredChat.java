@@ -26,6 +26,7 @@ import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.filter.Filter;
 import dev.langchain4j.store.embedding.filter.comparison.IsEqualTo;
+import dev.langchain4j.store.embedding.filter.comparison.IsGreaterThan;
 import io.quarkiverse.ai.github.db.Filters;
 import io.quarkiverse.ai.github.db.RepositoryFilter;
 import io.quarkiverse.ai.github.scanner.GithubMetadata;
@@ -70,19 +71,21 @@ public class FilteredChat implements Supplier<RetrievalAugmentor> {
         this.filter = filter;
         this.minScore = filter.minScore;
         embeddingFilter = new IsEqualTo(GithubMetadata.REPOSITORY, filter.repository);
+        if (filter.type != null) {
+            embeddingFilter = embeddingFilter.and(new IsGreaterThan(GithubMetadata.TYPE, filter.type.name()));
+        }
+        if (filter.updatedSince != null) {
+            embeddingFilter = embeddingFilter
+                    .and(new IsGreaterThan(GithubMetadata.UPDATED_AT, filter.updatedSince.fromMillis()));
+        }
+        if (filter.createdSince != null) {
+            embeddingFilter = embeddingFilter
+                    .and(new IsGreaterThan(GithubMetadata.CREATED_AT, filter.createdSince.fromMillis()));
+        }
         if (filter.filters == null) {
             return;
         }
         Filters filters = filter.filters;
-        if (filters.type != null) {
-            embeddingFilter = embeddingFilter.and(new IsEqualTo(GithubMetadata.TYPE, filters.type));
-        }
-        if (filters.updatedSince != null) {
-            embeddingFilter = embeddingFilter.and(new IsEqualTo(GithubMetadata.UPDATED_AT, filters.updatedSince));
-        }
-        if (filters.createdSince != null) {
-            embeddingFilter = embeddingFilter.and(new IsEqualTo(GithubMetadata.CREATED_AT, filters.createdSince));
-        }
         if (filters.andLabels != null && !filters.andLabels.isEmpty()) {
             for (String label : filters.andLabels) {
                 embeddingFilter = embeddingFilter.and(new IsEqualTo(GithubMetadata.label(label), "true"));

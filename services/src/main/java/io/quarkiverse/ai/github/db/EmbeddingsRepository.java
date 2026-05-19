@@ -113,26 +113,26 @@ public class EmbeddingsRepository {
         if (filter.repository != null) {
             sb.append("metadata->>'repo' = '" + filter.repository + "'");
         }
+        if (filter.type != null) {
+            if (sb.length() > 0) {
+                sb.append(" AND ");
+            }
+            sb.append("metadata->>'type' = '" + filter.type.name() + "'");
+        }
+        if (filter.updatedSince != null) {
+            if (sb.length() > 0) {
+                sb.append(" AND ");
+            }
+            sb.append("(metadata->>'updatedAt')::numeric > " + filter.updatedSince.fromMillis());
+        }
+        if (filter.createdSince != null) {
+            if (sb.length() > 0) {
+                sb.append(" AND ");
+            }
+            sb.append("(metadata->>'createdAt')::numeric > " + filter.createdSince.fromMillis());
+        }
         if (filter.filters != null) {
             Filters filters = filter.filters;
-            if (filters.type != null) {
-                if (sb.length() > 0) {
-                    sb.append(" AND ");
-                }
-                sb.append("metadata->>'type' = '" + filters.type + "'");
-            }
-            if (filters.updatedSince != null) {
-                if (sb.length() > 0) {
-                    sb.append(" AND ");
-                }
-                sb.append("(metadata->>'updatedAt')::numeric > " + filters.updatedSince.fromMillis());
-            }
-            if (filters.createdSince != null) {
-                if (sb.length() > 0) {
-                    sb.append(" AND ");
-                }
-                sb.append("(metadata->>'createdAt')::numeric > " + filters.createdSince.fromMillis());
-            }
             if (filters.andLabels != null && !filters.andLabels.isEmpty()) {
                 for (String label : filters.andLabels) {
                     if (sb.length() > 0) {
