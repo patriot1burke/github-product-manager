@@ -17,6 +17,7 @@
         <module>graphql-client</module>
         <module>services</module>
         <module>terminal</module>
+        <module>web-ui</module>
     </modules>
     <scm>
         <connection>scm:git:git@github.com:patriot1burke/github-product-manager.git</connection>
