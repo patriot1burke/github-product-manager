@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
 import io.quarkiverse.ai.github.db.EmbeddingsRepository;
+import io.quarkiverse.ai.github.db.RagReport;
 import io.quarkiverse.ai.github.db.RepositoryFilter;
 import io.quarkiverse.ai.github.scanner.PullCacheService;
 import io.quarkiverse.langchain4j.chatscopes.*;
@@ -59,4 +60,50 @@ public class MainMenuTools {
         List<RepositoryFilter> filters = RepositoryFilter.findAll().list();
         return filters.stream().map(f -> f.name).toList();
     }
+
+    @Tool("List all filters by name")
+    public List<String> listRagReports() {
+        List<RagReport> reports = RagReport.listAll();
+        return reports.stream().map(f -> f.name).toList();
+    }
+
+    @Tool(value = "Create a report", returnBehavior = ReturnBehavior.IMMEDIATE)
+    public void createReport() {
+        ctx.response().event(ChatWindow.PUSH_CHAT_WINDOW, "Create report");
+        ChatScope.push(RagReportBuilderPrompt.CHAT_ROUTE);
+        ChatScopeMemory.clearMemory();
+        ChatRoutes.execute();
+    }
+
+    @Inject
+    FilteredChatPrompt filteredChatPrompt;
+
+    @Tool(value = "Run a report", returnBehavior = ReturnBehavior.IMMEDIATE)
+    public void runReport(String reportName) {
+        RagReport report = RagReport.findById(reportName);
+        if (report == null) {
+            throw new IllegalStateException("Report not found: " + reportName);
+        }
+
+        ChatScopeMemory.clearMemory();
+
+        ChatScope.push();
+        try {
+            RepositoryFilter filter = RepositoryFilter.findById(report.filter);
+            if (filter == null) {
+                ctx.response().error(
+                        "Filter " + report.filter + " not found for report " + reportName + ".  You need to update the report");
+                return;
+            }
+            ctx.response().message("Running report with prompt:\n\n");
+            ctx.response().message(report.prompt);
+            ctx.response().message("\n\n");
+            filteredChat.setFilter(filter);
+            String result = filteredChatPrompt.chatWithFilter(report.prompt);
+            ctx.response().message(result);
+        } finally {
+            ChatScope.pop();
+        }
+    }
+
 }

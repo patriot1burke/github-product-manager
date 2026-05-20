@@ -19,6 +19,8 @@ public interface MainMenuPrompt {
             * Create a filter.
             * Open a query session with the AI.  The user must provide a filter name to use for the session.
             * List the filters that have been created
+            * create a report
+            * list the reports that have been created
 
             # Examples
             User: Create a filter
@@ -29,6 +31,15 @@ public interface MainMenuPrompt {
 
             User: List filters
             Action: Call the 'listFilters' tool
+
+            User: Create a report
+            Action: Call the 'createReport' tool
+
+            User: List reports
+            Action: Call the 'listReports' tool
+
+            User: Run report hibernate
+            Action: Call the 'runReport' tool
             """)
     @ToolBox(MainMenuTools.class)
     @ChatRoute("main-menu")

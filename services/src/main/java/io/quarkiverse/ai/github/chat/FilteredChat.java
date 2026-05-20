@@ -104,7 +104,7 @@ public class FilteredChat implements Supplier<RetrievalAugmentor> {
         }
     }
 
-    @ChatRoute("filtered-chat")
+    @ChatRoute(FilteredChatPrompt.CHAT_ROUTE)
     public void chat(@UserMessage String msg) {
         if (msg.equals("done") || msg.equals("exit")) {
             finishChat();
