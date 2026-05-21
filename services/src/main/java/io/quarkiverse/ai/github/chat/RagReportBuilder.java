@@ -33,7 +33,15 @@ public class RagReportBuilder {
 
     @ChatRoute(RagReportBuilderPrompt.CHAT_ROUTE)
     public void build(@UserMessage String msg) {
-        Result<String> result = prompt.build(msg);
+        Result<String> result = null;
+        if ("finished".equals(msg)) {
+            finish();
+        } else if ("cancel".equals(msg)) {
+            cancel();
+        } else {
+            result = prompt.build(msg);
+        }
+
         if (finished) {
             ChatScope.pop();
             ctx.response().event(ChatWindow.POP_CHAT_WINDOW, "");
@@ -121,13 +129,13 @@ public class RagReportBuilder {
             throw new IllegalStateException("Filter not set");
         }
         ctx.response().message("Running report with prompt:\n\n");
-        ctx.response().message(report.prompt);
+        ctx.response().message("```\n" + report.prompt + "\n```");
         ctx.response().message("\n\n");
         ChatScope.push();
         try {
             filteredChat.setFilter(filter);
             String result = filteredChatPrompt.chatWithFilter(report.prompt);
-            ctx.response().thinking(result);
+            ctx.response().message(result);
         } finally {
             ChatScope.pop();
         }

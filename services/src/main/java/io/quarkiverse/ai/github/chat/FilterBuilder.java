@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
@@ -22,6 +21,7 @@ import io.quarkiverse.langchain4j.chatscopes.ChatRoute;
 import io.quarkiverse.langchain4j.chatscopes.ChatRouteContext;
 import io.quarkiverse.langchain4j.chatscopes.ChatScope;
 import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 
 @ChatScoped
 public class FilterBuilder {
@@ -53,7 +53,17 @@ public class FilterBuilder {
     @ChatRoute(FilterBuilderPrompt.CHAT_ROUTE)
     public void build(@UserMessage String msg) {
         int size = changes.size();
-        Result<String> result = prompt.build(msg);
+        Result<String> result = null;
+        if ("finished".equals(msg)) {
+            finish();
+        } else if ("cancel".equals(msg)) {
+            cancel();
+        } else if ("undo".equals(msg)) {
+            undoLast();
+        } else {
+            result = prompt.build(msg);
+        }
+
         if (finished) {
             ChatScope.pop();
             ctx.response().event(ChatWindow.POP_CHAT_WINDOW, "");
@@ -62,11 +72,11 @@ public class FilterBuilder {
         if (changes.size() != size) {
             outputFilter(changes.getLast());
         }
-        if (result.content() != null) {
+        if (result != null && result.content() != null) {
             ctx.response().message(result.content());
         }
+        ctx.response().thinking("\nType 'undo' to undo your last changes.");
         ctx.response().thinking("Type 'finished' or 'cancel' to end the building process");
-
     }
 
     @Tool("Set the github repository")
@@ -129,7 +139,6 @@ public class FilterBuilder {
             int count = embeddings.filterCount(filter);
             ctx.response().thinking("Filter touches " + count + " entries");
         }
-        ctx.response().thinking("Type 'undo' to undo your last changes.");
     }
 
     @Tool("set the description of the filter you are creating")
@@ -146,7 +155,6 @@ public class FilterBuilder {
             ctx.response().thinking("Setting name to " + name);
             RepositoryFilter filter = next();
             filter.name = name;
-            outputFilter(filter);
         } catch (Exception e) {
             log.error("Error setting name", e);
             throw new RuntimeException(e);
@@ -164,7 +172,6 @@ public class FilterBuilder {
                 filter.filters = new Filters();
             }
             filter.filters.andLabels.add(label);
-            outputFilter(filter);
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -248,7 +255,6 @@ public class FilterBuilder {
     }
 
     @Tool(value = "Finish building the filter and return the final result", returnBehavior = ReturnBehavior.IMMEDIATE)
-    @Transactional
     public void finish() {
         ctx.response().thinking("Finishing filter");
         if (changes.isEmpty())
@@ -258,8 +264,9 @@ public class FilterBuilder {
             throw new IllegalStateException("Filter must have a name");
         if (filter.description == null || filter.description.isBlank())
             throw new IllegalStateException("Filter must have a description");
-        RepositoryFilterKey key = new RepositoryFilterKey(filter.repository, filter.name);
+        QuarkusTransaction.begin();
         RepositoryFilter.persist(filter);
+        QuarkusTransaction.commit();
         ctx.response().message("Created filter: " + filter.name);
         finished = true;
 

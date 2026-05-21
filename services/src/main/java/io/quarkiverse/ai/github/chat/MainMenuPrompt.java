@@ -5,9 +5,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
-import io.quarkiverse.langchain4j.chatscopes.ChatRoute;
 import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
-import io.quarkiverse.langchain4j.chatscopes.DefaultChatRoute;
 
 @RegisterAiService
 @ChatScoped
@@ -41,8 +39,6 @@ public interface MainMenuPrompt {
             User: Run report hibernate
             Action: Call the 'runReport' tool
             """)
-    @ToolBox(MainMenuTools.class)
-    @ChatRoute("main-menu")
-    @DefaultChatRoute
-    Result<String> build(@UserMessage String msg);
+    @ToolBox(MainMenuCommands.class)
+    Result<String> mainMenu(@UserMessage String msg);
 }

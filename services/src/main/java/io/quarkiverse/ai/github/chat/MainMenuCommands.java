@@ -6,6 +6,8 @@ import jakarta.inject.Inject;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.service.Result;
+import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.ai.github.db.EmbeddingsRepository;
 import io.quarkiverse.ai.github.db.RagReport;
 import io.quarkiverse.ai.github.db.RepositoryFilter;
@@ -13,7 +15,7 @@ import io.quarkiverse.ai.github.scanner.PullCacheService;
 import io.quarkiverse.langchain4j.chatscopes.*;
 
 @ChatScoped
-public class MainMenuTools {
+public class MainMenuCommands {
     @Inject
     PullCacheService pullCacheService;
 
@@ -25,6 +27,27 @@ public class MainMenuTools {
 
     @Inject
     EmbeddingsRepository embeddings;
+
+    @Inject
+    MainMenuPrompt menu;
+
+    @ChatRoute("main")
+    @DefaultChatRoute
+    public Result<String> mainMenu(@UserMessage String msg) {
+        if ("create filter".equals(msg)) {
+            createFilter();
+            return null;
+        } else if ("list filters".equals(msg)) {
+            List<String> list = listFilters();
+            ctx.response().message("**Filters**: " + String.join("\n- ", list));
+            return null;
+        } else if ("list reports".equals(msg)) {
+            List<String> list = listRagReports();
+            ctx.response().message("**Reports**: " + String.join("\n- ", list));
+            return null;
+        }
+        return menu.mainMenu(msg);
+    }
 
     @Tool(value = "Create a filter that helps with filtering issues and discussions in a GitHub repository query", returnBehavior = ReturnBehavior.IMMEDIATE)
     public void createFilter() {
@@ -61,7 +84,7 @@ public class MainMenuTools {
         return filters.stream().map(f -> f.name).toList();
     }
 
-    @Tool("List all filters by name")
+    @Tool("List all reports by name")
     public List<String> listRagReports() {
         List<RagReport> reports = RagReport.listAll();
         return reports.stream().map(f -> f.name).toList();
