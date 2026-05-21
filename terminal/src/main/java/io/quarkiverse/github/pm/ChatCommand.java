@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 
 import io.quarkiverse.ai.github.chat.ChatWindow;
 import io.quarkiverse.github.pm.util.BaseCommand;
+import io.quarkiverse.github.pm.util.MarkdownToAnsi;
 import io.quarkiverse.langchain4j.chatscopes.LocalChatRoutes;
 import picocli.CommandLine;
 
@@ -28,7 +29,7 @@ public class ChatCommand extends BaseCommand implements Runnable {
         placeholder.add("Main menu");
 
         LocalChatRoutes.SessionBuilder builder = client.builder()
-                .messageHandler(message -> System.out.println(message))
+                .messageHandler(message -> System.out.println(MarkdownToAnsi.render(message)))
                 .thinkingHandler(thinking -> System.out.println(DIM + thinking + RESET))
                 .errorHandler(error -> System.err.println(BOLD_RED + error + RESET))
                 .eventHandler(ChatWindow.PUSH_CHAT_WINDOW, (event) -> placeholder.push((String) event))
