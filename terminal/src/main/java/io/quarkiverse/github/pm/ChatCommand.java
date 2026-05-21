@@ -2,6 +2,8 @@ package io.quarkiverse.github.pm;
 
 import java.util.Scanner;
 import java.util.Stack;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import jakarta.inject.Inject;
 
@@ -25,15 +27,66 @@ public class ChatCommand extends BaseCommand implements Runnable {
     LocalChatRoutes.Client client;
     Stack<String> placeholder = new Stack<>();
 
+    ReadWriteLock lock = new ReentrantReadWriteLock();
+
+    synchronized void messageHandler(String msg) {
+        lock.readLock().lock();
+        try {
+            String render = MarkdownToAnsi.render(msg);
+            System.out.println(render);
+            System.out.flush();
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    synchronized void thinkingHandler(String thinking) {
+        lock.readLock().lock();
+        try {
+            System.out.println(DIM + thinking + RESET);
+            System.out.flush();
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    synchronized void errorHandler(String error) {
+        lock.readLock().lock();
+        try {
+            System.err.println(BOLD_RED + error + RESET);
+            System.err.flush();
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    synchronized void push(String msg) {
+        lock.readLock().lock();
+        try {
+            placeholder.push(msg);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    synchronized void pop(String msg) {
+        lock.readLock().lock();
+        try {
+            placeholder.pop();
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
     public void run() {
         placeholder.add("Main menu");
 
         LocalChatRoutes.SessionBuilder builder = client.builder()
-                .messageHandler(message -> System.out.println(MarkdownToAnsi.render(message)))
-                .thinkingHandler(thinking -> System.out.println(DIM + thinking + RESET))
-                .errorHandler(error -> System.err.println(BOLD_RED + error + RESET))
-                .eventHandler(ChatWindow.PUSH_CHAT_WINDOW, (event) -> placeholder.push((String) event))
-                .eventHandler(ChatWindow.POP_CHAT_WINDOW, (event) -> placeholder.pop());
+                .messageHandler(this::messageHandler)
+                .thinkingHandler(this::thinkingHandler)
+                .errorHandler(this::errorHandler)
+                .eventHandler(ChatWindow.PUSH_CHAT_WINDOW, this::push)
+                .eventHandler(ChatWindow.POP_CHAT_WINDOW, this::pop);
 
         LocalChatRoutes.Session session = builder.connect();
 
@@ -51,9 +104,10 @@ public class ChatCommand extends BaseCommand implements Runnable {
                 System.out.println();
                 session.chat(userMessage);
             }
+            lock.writeLock().lock();
             System.out.println();
             prompt();
-
+            lock.writeLock().unlock();
         }
     }
 
